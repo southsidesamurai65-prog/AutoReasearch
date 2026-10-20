@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ink-950 font-sans text-slate-200 antialiased;
+    background-image:
+      radial-gradient(1100px 500px at 12% -10%, rgba(200, 255, 77, 0.055), transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, rgba(94, 234, 212, 0.05), transparent 55%),
+      radial-gradient(700px 600px at 50% 120%, rgba(167, 139, 250, 0.045), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(200, 255, 77, 0.24);
+    color: #f4ffdb;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a3a4d transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #263548;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #35485f;
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-line/80 bg-ink-900/80 shadow-panel backdrop-blur-sm;
+  }
+
+  .panel::before {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  }
+
+  .panel-head {
+    @apply flex shrink-0 items-center justify-between gap-3 border-b border-line/70 px-3.5 py-2.5;
+  }
+
+  .panel-title {
+    @apply flex min-w-0 items-center gap-2 text-[13px] font-semibold tracking-wide text-slate-100;
+  }
+
+  .panel-kicker {
+    @apply font-mono text-[9px] uppercase tracking-[0.18em] text-slate-500;
+  }
+
+  .field {
+    @apply w-full rounded-lg border border-line bg-ink-950/80 px-2.5 py-1.5 text-[12.5px] text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-accent/60 focus:ring-1 focus:ring-accent/20;
+  }
+
+  .label {
+    @apply mb-1 block text-[10.5px] font-medium tracking-wide text-slate-500;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12.5px] font-medium transition disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-ink-950 shadow-[0_0_26px_-10px_rgba(200,255,77,0.85)] hover:bg-[#d6ff70];
+  }
+
+  .btn-ghost {
+    @apply border border-line bg-ink-800/50 text-slate-300 hover:border-slate-600 hover:text-white;
+  }
+
+  .btn-danger {
+    @apply border border-rose-500/25 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20;
+  }
+
+  .chip {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-full border border-line/90 bg-ink-800/70 px-1.5 py-0.5 font-mono text-[9px] text-slate-400;
+  }
+
+  .icon-btn {
+    @apply inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-500 transition hover:bg-ink-700 hover:text-slate-200;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.md {
+  @apply text-[13px] leading-[1.75] text-slate-300;
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md h2 {
+  @apply mb-2.5 mt-1 text-[16px] font-semibold tracking-tight text-white;
+}
+
+.md h3 {
+  @apply mb-2 mt-4 text-[13.5px] font-semibold text-slate-100;
+}
+
+.md p {
+  @apply mb-2.5;
+}
+
+.md strong {
+  @apply font-semibold text-slate-100;
+}
+
+.md ul {
+  @apply mb-2.5 list-disc space-y-1 pl-5 marker:text-accent/60;
+}
+
+.md ol {
+  @apply mb-2.5 list-decimal space-y-1 pl-5 marker:text-slate-500;
+}
+
+.md blockquote {
+  @apply my-2.5 border-l-2 border-accent/40 pl-3 text-[12px] text-slate-500;
+}
+
+.md code {
+  @apply rounded bg-ink-950 px-1 py-0.5 font-mono text-[11.5px] text-accent/90;
+}
+
+.md a {
+  @apply text-accent underline decoration-accent/30 underline-offset-2;
+}
+
+.md hr {
+  @apply my-4 border-line;
+}
+
+.mermaid-wrap svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-wrap .nodeLabel,
+.mermaid-wrap .edgeLabel {
+  font-family: inherit !important;
+}
