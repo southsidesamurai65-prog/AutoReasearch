@@ -312,6 +312,7 @@ export default function App() {
         <SettingsDialog
           settings={config.settings}
           bossModel={bossModel}
+          bossHarness={bossAgent?.harness}
           onClose={() => setShowSettings(false)}
           onSaved={(settings) =>
             setConfig((previous) =>

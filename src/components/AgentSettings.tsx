@@ -173,7 +173,7 @@ function harnessHint(
         : `未检测到可用的 Codex${runtime?.error ? `：${runtime.error}` : '，请先安装并登录 codex'}。`
     }
     case 'openai-compatible':
-      return '直连 OpenAI 兼容 API 暂未接入，请使用 opencode、Claude Code 或 Codex。'
+      return '直连 OpenAI 兼容 /chat/completions 端点；填写 Base URL、模型，API Key 可选。支持工作区读写和命令工具。'
   }
 }
 
@@ -373,9 +373,7 @@ function AgentCard({
               >
                 {(Object.keys(HARNESS_LABELS) as HarnessKind[]).map((key) => {
                   const runtime = harness?.runtimes?.[key]
-                  const unavailable =
-                    key === 'openai-compatible' ||
-                    runtime?.available === false
+                  const unavailable = runtime?.available === false
                   return (
                     <option key={key} value={key} disabled={unavailable}>
                       {HARNESS_LABELS[key]}
@@ -396,7 +394,9 @@ function AgentCard({
                     ? 'provider/model'
                     : draft.harness === 'claude-code'
                       ? 'haiku / sonnet / 完整模型名，留空用默认'
-                      : 'gpt-5.x，留空用 CLI 默认'
+                      : draft.harness === 'codex'
+                        ? 'gpt-5.x，留空用 CLI 默认'
+                        : 'gpt-4o-mini / 端点支持的模型名'
                 }
               />
             </div>
@@ -412,52 +412,65 @@ function AgentCard({
             {harnessHint(draft.harness, harness)}
           </p>
 
-          <div>
-            <label className="label">Base URL（预留）</label>
-            <input
-              value={draft.baseUrl}
-              onChange={(event) => update('baseUrl', event.target.value)}
-              className="field font-mono text-[11px]"
-              placeholder="https://api.example.com/v1"
-            />
-          </div>
+          {draft.harness === 'openai-compatible' ? (
+            <>
+              <div>
+                <label className="label">Base URL</label>
+                <input
+                  value={draft.baseUrl}
+                  onChange={(event) => update('baseUrl', event.target.value)}
+                  className="field font-mono text-[11px]"
+                  placeholder="https://api.openai.com/v1"
+                />
+              </div>
 
-          <div>
-            <label className="label flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <KeyRound size={10} /> API Key（预留）
-              </span>
-              {agent.hasKey && (
-                <span className="font-mono text-[9px] text-song-300">
-                  已保存
-                </span>
-              )}
-            </label>
-            <div className="flex gap-1.5">
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(event) => {
-                  setApiKey(event.target.value)
-                  setSaved(false)
-                }}
-                className="field font-mono text-[11px]"
-                placeholder={
-                  agent.hasKey ? '••••••••（留空不修改）' : 'sk-...'
-                }
-                autoComplete="off"
-              />
-              {agent.hasKey && (
-                <button
-                  type="button"
-                  onClick={() => void clearKey()}
-                  className="btn btn-ghost h-[30px] shrink-0 px-2 text-[9.5px]"
-                >
-                  清除
-                </button>
-              )}
-            </div>
-          </div>
+              <div>
+                <label className="label flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <KeyRound size={10} /> API Key（可选）
+                  </span>
+                  {agent.hasKey && (
+                    <span className="font-mono text-[9px] text-song-300">
+                      已保存
+                    </span>
+                  )}
+                </label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(event) => {
+                      setApiKey(event.target.value)
+                      setSaved(false)
+                    }}
+                    className="field font-mono text-[11px]"
+                    placeholder={
+                      agent.hasKey ? '••••••••（留空不修改）' : 'sk-...'
+                    }
+                    autoComplete="off"
+                  />
+                  {agent.hasKey && (
+                    <button
+                      type="button"
+                      onClick={() => void clearKey()}
+                      className="btn btn-ghost h-[30px] shrink-0 px-2 text-[9.5px]"
+                    >
+                      清除
+                    </button>
+                  )}
+                </div>
+                <p className="mt-1 text-[9px] leading-4 text-mo-400">
+                  会以 <span className="font-mono">Authorization: Bearer</span>{' '}
+                  发送；留空时不带认证头，适合本地端点。
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="text-[9.5px] leading-4 text-mo-400">
+              当前 CLI 使用自身登录态；Base URL / API Key 仅用于 OpenAI
+              兼容 API。
+            </p>
+          )}
 
           <div>
             <label className="label">额外提示词</label>

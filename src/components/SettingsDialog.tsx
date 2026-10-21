@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type {
   AppSettings,
+  HarnessKind,
   SubagentSessionPolicy,
 } from '../../shared/types'
 import { api, type ModelTestResult, type SettingsPatch } from '../lib/api'
@@ -19,6 +20,7 @@ import { Modal } from './Modal'
 interface SettingsDialogProps {
   settings: AppSettings
   bossModel: string
+  bossHarness?: HarnessKind
   onClose: () => void
   onSaved: (settings: AppSettings) => void
 }
@@ -26,6 +28,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({
   settings,
   bossModel,
+  bossHarness,
   onClose,
   onSaved,
 }: SettingsDialogProps) {
@@ -268,7 +271,10 @@ export function SettingsDialog({
             子代理的 `maxTurns` 和 `budgetUsd` 已在 harness 层强制生效；
             当前 Boss 模型：
             <span className="font-mono text-mo-600">
-              {bossModel || 'CLI 默认模型'}
+              {bossModel ||
+                (bossHarness === 'openai-compatible'
+                  ? '未填写模型'
+                  : 'CLI 默认模型')}
             </span>
           </p>
         </section>

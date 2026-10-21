@@ -1,13 +1,13 @@
 # 自动科研台
 
-一个本地运行的多 Agent 科研工作台：左侧管理工作区、资料和 Agent，右侧实时查看调用链、Boss 汇报和教师讲解。真实模式通过 [opencode](https://opencode.ai)、[Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或 [Codex CLI](https://developers.openai.com/codex/cli) 调用模型，直接在你的项目目录里读写文件。
+一个本地运行的多 Agent 科研工作台：左侧管理工作区、资料和 Agent，右侧实时查看调用链、Boss 汇报和教师讲解。真实模式通过 [opencode](https://opencode.ai)、[Claude Code](https://docs.anthropic.com/en/docs/claude-code)、[Codex CLI](https://developers.openai.com/codex/cli) 或任意 OpenAI 兼容 API 端点调用模型，直接在你的项目目录里读写文件。
 
-当前版本已完成：**运行历史持久化、预算/轮次/超时限制、子代理会话清理、网络代理设置、工作区快照与回滚，以及 opencode / Claude Code / Codex 三种 CLI harness**。
+当前版本已完成：**运行历史持久化、预算/轮次/超时限制、子代理会话清理、网络代理设置、工作区快照与回滚，以及 opencode / Claude Code / Codex / OpenAI 兼容 API 四种 harness**。
 
 ## 功能
 
 - **多 Agent 编排**：Boss 规划任务，按需调度搜索、后端、前端、Debug、攻坚、教师等角色。
-- **多 CLI harness**：每个 Agent 可独立选择 opencode、Claude Code 或 Codex CLI。
+- **多 harness**：每个 Agent 可独立选择 opencode、Claude Code、Codex CLI 或 OpenAI 兼容 API。
 - **真实 / Mock 双模式**：Mock 不调用模型，用于演示和 UI 调试。
 - **Boss 线程续聊**：跨运行复用 Boss session，支持项目记忆和自动新开；更换 harness 或模型会自动新开。
 - **实时事件流**：SSE 推送调用节点、Boss 流式汇报、教师讲义。
@@ -22,13 +22,13 @@
 
 - 后端：Node.js、TypeScript、Fastify、SSE
 - 前端：React 19、Vite、Tailwind CSS
-- Agent 执行：opencode CLI、Claude Code CLI、Codex CLI
+- Agent 执行：opencode CLI、Claude Code CLI、Codex CLI、OpenAI 兼容 API
 - 数据：本地 JSON 文件
 
 ## 环境要求
 
 - Node.js 20+
-- 至少安装并登录一种 CLI：
+- 至少准备一种执行方式：安装并登录任意一种 CLI，或准备一个 OpenAI 兼容端点。
 
   ```bash
   opencode --version && opencode auth login
@@ -36,8 +36,9 @@
   codex --version && codex login
   ```
 
+- 直连 API 不需要安装 CLI，但需要支持 `/chat/completions` 的端点和模型名；API Key 可选。
 - 建议在独立的 git 工作区里运行，便于快照、diff 和回滚。
-- 真实模式下 Agent 可以执行命令和修改工作区文件；opencode 使用 `--auto`，Claude 使用 `bypassPermissions`，Codex 使用 `workspace-write + approval never`。
+- 真实模式下 Agent 可以执行命令和修改工作区文件；opencode 使用 `--auto`，Claude 使用 `bypassPermissions`，Codex 使用 `workspace-write + approval never`，直连 API 使用内置工作区工具。
 
 ## 快速开始
 
@@ -69,6 +70,7 @@ npm start
 │   │   ├── opencode.ts     # opencode CLI 适配、session、费用与限制
 │   │   ├── claude.ts       # Claude Code stream-json 适配
 │   │   ├── codex.ts        # Codex exec JSONL 适配
+│   │   ├── openai.ts       # OpenAI 兼容 /chat/completions 适配与工具循环
 │   │   └── index.ts        # harness 分发与会话清理
 │   ├── runs.ts             # 运行生命周期、历史、快照
 │   ├── run-history.ts      # data/runs/ 持久化
@@ -84,6 +86,7 @@ npm start
 ├── data/                   # 本地数据（gitignored）
 │   ├── config.json         # Agent、网络、运行限制
 │   ├── state.json          # 活动工作区、引用、Boss 线程
+│   ├── api-sessions/       # 直连 API 的本地会话历史
 │   └── runs/               # 运行历史
 ├── dist/                   # 生产构建产物
 └── README.md
@@ -117,7 +120,17 @@ opencode/deepseek-v4.1-flash-free
 
 **Codex CLI**：可填 `gpt-5.x` 等模型名；留空使用 CLI 默认模型。
 
-`baseUrl` / `apiKey` 字段暂时不参与三种 CLI 的调用，登录态由各自 CLI 管理。模型是否可用取决于本机网络、CLI 登录状态和账户额度。设置页提供「保存并测试 Boss 模型」，会使用 Boss 当前的 harness 发起一次极小的真实请求。
+**OpenAI 兼容 API**：填写模型名、Base URL 和可选 API Key。Base URL 可以是：
+
+```text
+https://api.openai.com/v1
+http://127.0.0.1:8000/v1
+https://openrouter.ai/api/v1
+```
+
+系统会自动补全为 `/chat/completions`；也可以直接填完整的 `.../chat/completions` 地址。API Key 会以 `Authorization: Bearer <key>` 发送，留空则不带认证头，适合本地端点。
+
+CLI harness 的登录态由各自 CLI 管理；`baseUrl` / `apiKey` 只对 OpenAI 兼容 API 生效。设置页提供「保存并测试 Boss 模型」，会使用 Boss 当前的 harness 发起一次极小的真实请求。
 
 ### CLI harness 细节
 
@@ -126,11 +139,14 @@ opencode/deepseek-v4.1-flash-free
 | opencode | `opencode run --format json` | `--session <id>` | 完成后 `opencode session delete` |
 | Claude Code | `claude -p --output-format stream-json --verbose` | `--resume <id>` | `--no-session-persistence` |
 | Codex CLI | `codex exec --json` | `codex exec resume <thread-id>` | `--ephemeral` |
+| OpenAI 兼容 API | `POST /v1/chat/completions` | 本地 `data/api-sessions/<id>.json` | 子代理默认 ephemeral，不落盘 |
 
 - opencode 使用 `--auto` 自动批准工作区权限。
 - Claude Code 使用 `--permission-mode bypassPermissions` 和 `--max-budget-usd`。
 - Codex 使用 `workspace-write` sandbox 和 `approval_policy="never"`。
-- Codex CLI 目前不提供费用硬上限，`budgetUsd` 对 Codex 只做记录，不会中止调用；超时和轮次限制仍然生效。
+- 直连 API 提供 `read_file`、`list_files`、`write_file`、`run_command` 四个工具；写入限制在工作区内，`.auto/refs` 只读。端点不支持 `tools` 时会自动退化为纯对话，此时不能读写工作区。
+- 直连 API 当前使用非流式请求，文本会在每个响应步骤完成后写入调用链，而不是逐 token 推送。
+- Codex CLI 和直连 API 目前不提供费用硬上限，`budgetUsd` 只做记录，不会中止调用；超时和轮次限制仍然生效。
 
 ### 网络代理
 
@@ -141,12 +157,12 @@ opencode/deepseek-v4.1-flash-free
 - 设置 `NO_PROXY`（默认 `localhost,127.0.0.1,::1`）
 - 可选自定义 CA 证书路径
 
-代理只作用于 opencode 子进程，不会改动系统环境。代理密码会随 `data/config.json` 明文保存在本地，请勿把该文件提交到仓库或分享给他人。
+代理会传给 opencode / Claude Code / Codex 子进程，不会改动系统环境。直连 API 使用 Node 原生 fetch，暂不读取应用内代理设置。代理密码会随 `data/config.json` 明文保存在本地，请勿把该文件提交到仓库或分享给他人。
 
 ### 运行限制
 
 - **单次调用超时**：默认 15 分钟，可按 Agent 调用生效。
-- **预算**：`budgetUsd` 是每个 Agent 在一次运行中的累计上限；达到上限后该 Agent 的后续调用会直接失败。
+- **预算**：`budgetUsd` 是每个 Agent 在一次运行中的累计上限；opencode 和 Claude Code 会硬中止，Codex 和直连 API 只做记录。
 - **轮次**：`maxTurns` 通过 harness 事件计数强制中止。
 - `budgetUsd = 0` 表示不限制预算。
 
@@ -188,10 +204,10 @@ opencode/deepseek-v4.1-flash-free
 
 ## 子代理会话
 
-- Boss 会话持久化在 `data/state.json`，支持跨运行续聊。
-- 子代理默认在任务完成后通过 `opencode session delete` 清理，避免本地会话和工具输出持续膨胀。
+- Boss 会话持久化在 `data/state.json`，支持跨运行续聊；直连 API 的对话记录在 `data/api-sessions/`。
+- 子代理默认使用各自的临时会话：opencode 完成后 `opencode session delete`，Claude Code 使用 `--no-session-persistence`，Codex 使用 `--ephemeral`，直连 API 不落盘。
 - 可在设置页把「子代理会话」改为「保留会话」用于排查问题。
-- 历史遗留的子代理会话不会自动清理；可用 `opencode session list` 查看，`opencode session delete <id>` 手动删除。
+- 历史遗留的 opencode 子代理会话不会自动清理；可用 `opencode session list` 查看，`opencode session delete <id>` 手动删除。
 
 ## API 速览
 
@@ -229,7 +245,7 @@ Vite 的 `/api` 代理固定指向 `127.0.0.1:8787`；如果改后端端口，�
 ## 安全与限制
 
 - 本项目默认只监听 `127.0.0.1`，没有用户系统，适合本机单人使用。
-- 真实模式会自动批准 CLI 的文件与命令操作，Agent 可以修改工作区。请使用专用工作区，不要直接指向重要目录。
+- 真实模式会自动批准 CLI 的文件与命令操作，直连 API 也会执行内置文件和命令工具，Agent 可以修改工作区。请使用专用工作区，不要直接指向重要目录。
 - `data/config.json` 中的 API Key、代理密码是明文；不要提交 `data/`。
 - 快照和回滚只覆盖 git 工作区；非 git 工作区需要自行备份。
 - 目前未接入 MCP 管理、多用户权限、任务队列和云端同步，这些属于后续功能。

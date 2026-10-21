@@ -59,7 +59,9 @@ interface Usage {
 function modelFor(agent: AgentConfig): string {
   const model = agent.model.trim()
   if (model) return model
-  return agent.harness === 'opencode' ? DEFAULT_MODEL : '(CLI 默认模型)'
+  if (agent.harness === 'opencode') return DEFAULT_MODEL
+  if (agent.harness === 'openai-compatible') return '(未配置模型)'
+  return '(CLI 默认模型)'
 }
 
 function addCall(
@@ -622,6 +624,8 @@ async function runHarness(
     prompt,
     cwd: host.snapshot.workspace,
     model,
+    baseUrl: agent.baseUrl.trim(),
+    apiKey: agent.apiKey,
     title: `${agent.name} · ${title}`,
     sessionId,
     signal: host.signal,

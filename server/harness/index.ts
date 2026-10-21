@@ -1,6 +1,7 @@
 import type { HarnessKind } from '../../shared/types'
 import { runClaude } from './claude'
 import { runCodex } from './codex'
+import { runOpenAICompatible } from './openai'
 import {
   deleteOpencodeSession,
   runOpencode,
@@ -22,16 +23,7 @@ export async function runHarnessCli(
     case 'codex':
       return runCodex(options)
     case 'openai-compatible':
-      return {
-        text: '',
-        tokens: 0,
-        costUsd: 0,
-        cacheReadTokens: 0,
-        cacheWriteTokens: 0,
-        toolCalls: 0,
-        error: 'OpenAI 兼容 API 尚未接入，请改用 opencode、Claude Code 或 Codex',
-        exitCode: null,
-      }
+      return runOpenAICompatible(options)
   }
 }
 

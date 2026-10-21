@@ -87,16 +87,27 @@ export function TopBar({
       { available: boolean; version?: string },
     ][]
   ).filter(([, runtime]) => runtime.available)
+  const cliRuntimes = runtimes.filter(
+    ([kind]) => kind !== 'openai-compatible',
+  )
+  const apiAvailable = Boolean(
+    harness?.runtimes?.['openai-compatible']?.available,
+  )
+  const apiSuffix = apiAvailable ? ' · API' : ''
   const runtimeLabel =
-    runtimes.length === 0
-      ? 'NO HARNESS'
-      : runtimes.length === 1
-        ? runtimes[0][0] === 'opencode'
-          ? 'OPENCODE'
-          : runtimes[0][0] === 'claude-code'
-            ? 'CLAUDE'
-            : 'CODEX'
-        : `${runtimes.length} CLIs`
+    cliRuntimes.length === 0
+      ? apiAvailable
+        ? 'API READY'
+        : 'NO HARNESS'
+      : cliRuntimes.length === 1
+        ? `${
+            cliRuntimes[0][0] === 'opencode'
+              ? 'OPENCODE'
+              : cliRuntimes[0][0] === 'claude-code'
+                ? 'CLAUDE'
+                : 'CODEX'
+          }${apiSuffix}`
+        : `${cliRuntimes.length} CLIs${apiSuffix}`
   const runtimeTitle =
     runtimes.length > 0
       ? runtimes
@@ -105,7 +116,7 @@ export function TopBar({
               `${HARNESS_LABELS[kind]} ${runtime.version ?? ''}`.trim(),
           )
           .join('\n')
-      : harness?.error ?? '未检测到 CLI'
+      : harness?.error ?? '未检测到可用执行方式'
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line/60 px-4">
@@ -125,7 +136,7 @@ export function TopBar({
             </span>
           </div>
           <p className="truncate font-kai text-[10px] tracking-[0.08em] text-mo-400">
-            Boss Agent 编排 · opencode / Claude / Codex · 实时报捷
+            Boss Agent 编排 · opencode / Claude / Codex / API · 实时报捷
           </p>
         </div>
 

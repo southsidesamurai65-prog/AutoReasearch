@@ -247,6 +247,8 @@ async function main(): Promise<void> {
         prompt: '请只回复 OK，不要调用任何工具。',
         cwd: getActiveWorkspacePath(),
         model,
+        baseUrl: boss?.baseUrl?.trim() ?? '',
+        apiKey: boss?.apiKey ?? '',
         title: 'AUTO model test',
         timeoutMs: 120_000,
         maxSteps: 2,
@@ -418,9 +420,9 @@ async function main(): Promise<void> {
       )
       if (missing.length > 0) {
         return reply.code(400).send({
-          error: `以下 Agent 的 CLI 不可用：${missing
+          error: `以下 Agent 的执行方式不可用：${missing
             .map((agent) => `${agent.name}（${agent.harness}）`)
-            .join('、')}。请安装/登录对应 CLI，或在 Agent 设置中切换 harness。`,
+            .join('、')}。请安装/登录对应 CLI，或切换 harness。`,
         })
       }
     }

@@ -2,6 +2,8 @@ export interface HarnessRunOptions {
   prompt: string
   cwd: string
   model: string
+  baseUrl?: string
+  apiKey?: string
   title?: string
   sessionId?: string
   signal?: AbortSignal

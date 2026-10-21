@@ -54,8 +54,8 @@ export async function getHarnessStatus(force = false): Promise<HarnessStatus> {
       'claude-code': claude,
       codex,
       'openai-compatible': {
-        available: false,
-        error: '暂未接入直连 API',
+        available: true,
+        version: 'HTTP API',
       },
     },
   }
