@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import type {
   FsEntry,
   FsListing,
+  HarnessKind,
   RecentWorkspace,
   ReferenceItem,
   WorkspaceFile,
@@ -44,6 +45,7 @@ const IGNORED_DIRS = new Set([
 
 export interface StoredThread {
   sessionId: string
+  harness: HarnessKind
   model: string
   turns: number
   lastUsedAt: string
@@ -205,6 +207,7 @@ function threadInfoFor(target: string): WorkspaceState['thread'] {
   return {
     active: Boolean(thread?.sessionId),
     turns: thread?.turns ?? 0,
+    harness: thread?.harness ?? 'opencode',
     model: thread?.model ?? null,
     lastUsedAt: thread?.lastUsedAt ?? null,
     memoryChars: thread?.memory.length ?? 0,
@@ -217,12 +220,18 @@ export function getBossThread(target = activePath()): StoredThread | null {
 
 export async function recordBossThread(
   target: string,
-  data: { sessionId: string; model: string; memory: string },
+  data: {
+    sessionId: string
+    harness: HarnessKind
+    model: string
+    memory: string
+  },
 ): Promise<void> {
   if (!state) return
   const previous = state.threads[target]
   state.threads[target] = {
     sessionId: data.sessionId,
+    harness: data.harness,
     model: data.model,
     turns:
       previous?.sessionId === data.sessionId ? previous.turns + 1 : 1,

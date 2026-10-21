@@ -266,7 +266,10 @@ export function SettingsDialog({
 
           <p className="text-[10px] leading-4 text-mo-400">
             子代理的 `maxTurns` 和 `budgetUsd` 已在 harness 层强制生效；
-            当前 Boss 模型：<span className="font-mono text-mo-600">{bossModel}</span>
+            当前 Boss 模型：
+            <span className="font-mono text-mo-600">
+              {bossModel || 'CLI 默认模型'}
+            </span>
           </p>
         </section>
 

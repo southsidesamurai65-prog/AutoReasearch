@@ -1,14 +1,15 @@
 # 自动科研台
 
-一个本地运行的多 Agent 科研工作台：左侧管理工作区、资料和 Agent，右侧实时查看调用链、Boss 汇报和教师讲解。真实模式通过 [opencode](https://opencode.ai) harness 调用模型，直接在你的项目目录里读写文件。
+一个本地运行的多 Agent 科研工作台：左侧管理工作区、资料和 Agent，右侧实时查看调用链、Boss 汇报和教师讲解。真实模式通过 [opencode](https://opencode.ai)、[Claude Code](https://docs.anthropic.com/en/docs/claude-code) 或 [Codex CLI](https://developers.openai.com/codex/cli) 调用模型，直接在你的项目目录里读写文件。
 
-当前分支（`feat`）完成了第一轮运行时补强：**运行历史持久化、预算/轮次/超时限制、子代理会话清理、网络代理设置、工作区快照与回滚**。
+当前版本已完成：**运行历史持久化、预算/轮次/超时限制、子代理会话清理、网络代理设置、工作区快照与回滚，以及 opencode / Claude Code / Codex 三种 CLI harness**。
 
 ## 功能
 
 - **多 Agent 编排**：Boss 规划任务，按需调度搜索、后端、前端、Debug、攻坚、教师等角色。
+- **多 CLI harness**：每个 Agent 可独立选择 opencode、Claude Code 或 Codex CLI。
 - **真实 / Mock 双模式**：Mock 不调用模型，用于演示和 UI 调试。
-- **Boss 线程续聊**：跨运行复用 Boss session，支持项目记忆和自动新开。
+- **Boss 线程续聊**：跨运行复用 Boss session，支持项目记忆和自动新开；更换 harness 或模型会自动新开。
 - **实时事件流**：SSE 推送调用节点、Boss 流式汇报、教师讲义。
 - **工作区直读直写**：Agent 以当前工作区为 cwd，文件区和外部引用可挂载资料。
 - **运行历史**：报告、调用链、成本与状态持久化到 `data/runs/`，重启不丢。
@@ -21,21 +22,22 @@
 
 - 后端：Node.js、TypeScript、Fastify、SSE
 - 前端：React 19、Vite、Tailwind CSS
-- Agent 执行：opencode CLI（`opencode run --format json`）
+- Agent 执行：opencode CLI、Claude Code CLI、Codex CLI
 - 数据：本地 JSON 文件
 
 ## 环境要求
 
 - Node.js 20+
-- 已安装并登录 opencode：
+- 至少安装并登录一种 CLI：
 
   ```bash
-  opencode --version
-  opencode auth login
+  opencode --version && opencode auth login
+  claude --version   # Claude Code，按 CLI 提示登录
+  codex --version && codex login
   ```
 
 - 建议在独立的 git 工作区里运行，便于快照、diff 和回滚。
-- 真实模式默认使用 `opencode run --auto`，Agent 可以修改工作区文件。
+- 真实模式下 Agent 可以执行命令和修改工作区文件；opencode 使用 `--auto`，Claude 使用 `bypassPermissions`，Codex 使用 `workspace-write + approval never`。
 
 ## 快速开始
 
@@ -63,7 +65,11 @@ npm start
 ```text
 .
 ├── server/                 # Fastify API、编排、harness、持久化
-│   ├── harness/opencode.ts # opencode CLI 适配、session、费用与限制
+│   ├── harness/
+│   │   ├── opencode.ts     # opencode CLI 适配、session、费用与限制
+│   │   ├── claude.ts       # Claude Code stream-json 适配
+│   │   ├── codex.ts        # Codex exec JSONL 适配
+│   │   └── index.ts        # harness 分发与会话清理
 │   ├── runs.ts             # 运行生命周期、历史、快照
 │   ├── run-history.ts      # data/runs/ 持久化
 │   ├── real.ts             # 真实多 Agent 编排
@@ -94,9 +100,11 @@ npm start
 | `HOST` | `127.0.0.1` | 监听地址，默认仅本机 |
 | `LOG_LEVEL` | `info` | Fastify 日志级别 |
 
-### 模型
+### 模型与 harness
 
-Agent 模型使用 `provider/model` 格式，例如：
+在左侧「子代理编排」里为每个 Agent 选择 harness 和模型。
+
+**opencode**：使用 `provider/model`，例如：
 
 ```text
 opencode/deepseek-v4.1-flash
@@ -105,9 +113,24 @@ opencode/glm-5.3-flash-free
 opencode/deepseek-v4.1-flash-free
 ```
 
-在左侧「子代理编排」里为每个 Agent 设置模型。真实模式目前只接入 opencode harness；`baseUrl` / `apiKey` 字段暂不参与 opencode 调用。
+**Claude Code**：可填 `haiku`、`sonnet`、`opus` 等别名，或完整模型名；留空使用 CLI 默认模型。
 
-模型是否可用取决于本机网络、opencode 登录状态和账户额度。设置页提供「保存并测试 Boss 模型」，会发起一次极小的真实请求并清理测试会话。
+**Codex CLI**：可填 `gpt-5.x` 等模型名；留空使用 CLI 默认模型。
+
+`baseUrl` / `apiKey` 字段暂时不参与三种 CLI 的调用，登录态由各自 CLI 管理。模型是否可用取决于本机网络、CLI 登录状态和账户额度。设置页提供「保存并测试 Boss 模型」，会使用 Boss 当前的 harness 发起一次极小的真实请求。
+
+### CLI harness 细节
+
+| harness | 执行方式 | Boss 续聊 | 子代理清理 |
+| --- | --- | --- | --- |
+| opencode | `opencode run --format json` | `--session <id>` | 完成后 `opencode session delete` |
+| Claude Code | `claude -p --output-format stream-json --verbose` | `--resume <id>` | `--no-session-persistence` |
+| Codex CLI | `codex exec --json` | `codex exec resume <thread-id>` | `--ephemeral` |
+
+- opencode 使用 `--auto` 自动批准工作区权限。
+- Claude Code 使用 `--permission-mode bypassPermissions` 和 `--max-budget-usd`。
+- Codex 使用 `workspace-write` sandbox 和 `approval_policy="never"`。
+- Codex CLI 目前不提供费用硬上限，`budgetUsd` 对 Codex 只做记录，不会中止调用；超时和轮次限制仍然生效。
 
 ### 网络代理
 
@@ -206,7 +229,7 @@ Vite 的 `/api` 代理固定指向 `127.0.0.1:8787`；如果改后端端口，�
 ## 安全与限制
 
 - 本项目默认只监听 `127.0.0.1`，没有用户系统，适合本机单人使用。
-- 真实模式使用 `--auto`，Agent 可以执行命令和修改工作区文件。请使用专用工作区，不要直接指向重要目录。
+- 真实模式会自动批准 CLI 的文件与命令操作，Agent 可以修改工作区。请使用专用工作区，不要直接指向重要目录。
 - `data/config.json` 中的 API Key、代理密码是明文；不要提交 `data/`。
 - 快照和回滚只覆盖 git 工作区；非 git 工作区需要自行备份。
 - 目前未接入 MCP 管理、多用户权限、任务队列和云端同步，这些属于后续功能。

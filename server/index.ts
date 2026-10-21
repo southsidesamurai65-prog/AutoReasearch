@@ -40,10 +40,10 @@ import {
   removeReference,
 } from './workspace'
 import {
-  deleteOpencodeSession,
-  getHarnessStatus,
-  runOpencode,
-} from './harness/opencode'
+  deleteHarnessSession,
+  runHarnessCli,
+} from './harness'
+import { getHarnessStatus } from './harness/opencode'
 import { proxyEnv } from './network'
 import { loadRunHistory } from './run-history'
 import {
@@ -227,18 +227,23 @@ async function main(): Promise<void> {
       const agents = getAgents()
       const boss =
         agents.find((agent) => agent.role === 'boss') ?? agents[0]
+      const harness = boss?.harness ?? 'opencode'
       const model =
         typeof request.body?.model === 'string' && request.body.model.trim()
           ? request.body.model.trim()
-          : boss?.model || DEFAULT_MODEL
+          : boss?.model.trim() ||
+            (harness === 'opencode' ? DEFAULT_MODEL : '')
 
-      if (!/^[\w.-]+\/[\w.:-]+$/.test(model)) {
+      if (
+        harness === 'opencode' &&
+        !/^[\w.-]+\/[\w.:-]+$/.test(model)
+      ) {
         return reply.code(400).send({ error: `模型格式无效：${model}` })
       }
 
       const startedAt = Date.now()
       const settings = getSettings()
-      const result = await runOpencode({
+      const result = await runHarnessCli(harness, {
         prompt: '请只回复 OK，不要调用任何工具。',
         cwd: getActiveWorkspacePath(),
         model,
@@ -246,16 +251,18 @@ async function main(): Promise<void> {
         timeoutMs: 120_000,
         maxSteps: 2,
         maxCostUsd: 1,
+        ephemeral: true,
         autoApprove: false,
         env: proxyEnv(settings.network),
       })
-      if (result.sessionID) {
-        await deleteOpencodeSession(result.sessionID)
+      if (harness === 'opencode' && result.sessionID) {
+        await deleteHarnessSession(harness, result.sessionID)
       }
 
       return {
         ok: !result.error,
-        model,
+        harness,
+        model: model || '(CLI 默认模型)',
         text: result.text.slice(0, 500),
         error: result.error,
         latencyMs: Date.now() - startedAt,
@@ -400,11 +407,20 @@ async function main(): Promise<void> {
     const requestedThreadMode: ThreadMode =
       request.body?.threadMode === 'new' ? 'new' : 'continue'
 
+    const agents = getAgents()
+
     if (mode === 'real') {
       const harness = await getHarnessStatus()
-      if (!harness.available) {
+      const missing = agents.filter(
+        (agent) =>
+          agent.enabled &&
+          !harness.runtimes[agent.harness]?.available,
+      )
+      if (missing.length > 0) {
         return reply.code(400).send({
-          error: `opencode harness 不可用：${harness.error ?? '未安装或未登录'}`,
+          error: `以下 Agent 的 CLI 不可用：${missing
+            .map((agent) => `${agent.name}（${agent.harness}）`)
+            .join('、')}。请安装/登录对应 CLI，或在 Agent 设置中切换 harness。`,
         })
       }
     }
@@ -412,11 +428,14 @@ async function main(): Promise<void> {
     const workspace = getActiveWorkspacePath()
     const refs = await prepareReferencesForRun()
     const workspaceFiles = await listWorkspaceFiles()
-    const agents = getAgents()
     const boss =
       agents.find((agent) => agent.role === 'boss') ?? agents[0]
-    const bossModel = boss?.model || DEFAULT_MODEL
+    const bossHarness = boss?.harness ?? 'opencode'
+    const bossModel =
+      boss?.model.trim() ||
+      (bossHarness === 'opencode' ? DEFAULT_MODEL : '')
     const storedThread = getBossThread(workspace)
+    const storedHarness = storedThread?.harness ?? 'opencode'
 
     let threadMode = requestedThreadMode
     let bossSessionId: string | null = null
@@ -431,6 +450,9 @@ async function main(): Promise<void> {
       } else if (!storedThread?.sessionId) {
         threadMode = 'new'
         threadNotice = '没有可续用的 Boss 会话，本次自动新开。'
+      } else if (storedHarness !== bossHarness) {
+        threadMode = 'new'
+        threadNotice = `Boss harness 已从 ${storedHarness} 更换为 ${bossHarness}，本次自动新开线程，并带入项目记忆。`
       } else if (storedThread.model !== bossModel) {
         threadMode = 'new'
         threadNotice = 'Boss 模型已更换，本次自动新开线程，并带入项目记忆。'
@@ -439,7 +461,7 @@ async function main(): Promise<void> {
         threadNotice = `Boss 会话已达 ${MAX_THREAD_TURNS} 轮，本次自动新开并带入项目记忆。`
       } else {
         bossSessionId = storedThread.sessionId
-        threadNotice = `续用上次 Boss 会话（第 ${storedThread.turns + 1} 轮，模型 ${storedThread.model}）。`
+        threadNotice = `续用上次 Boss 会话（第 ${storedThread.turns + 1} 轮，${storedHarness}，模型 ${storedThread.model || 'CLI 默认'}）。`
       }
     }
 

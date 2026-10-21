@@ -550,6 +550,7 @@ export function startRun(input: StartRunInput): string {
     saveThread: async (sessionId: string, memory: string) => {
       await recordBossThread(input.workspace, {
         sessionId,
+        harness: boss.harness,
         model: boss.model,
         memory,
       })

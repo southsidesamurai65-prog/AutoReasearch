@@ -8,7 +8,12 @@ import {
   Settings2,
   Terminal,
 } from 'lucide-react'
-import type { HarnessStatus, WorkspaceInfo } from '../../shared/types'
+import type {
+  HarnessKind,
+  HarnessStatus,
+  WorkspaceInfo,
+} from '../../shared/types'
+import { HARNESS_LABELS } from '../../shared/presets'
 import type { LiveStatus, RunState } from '../hooks/useRun'
 import { formatCost, formatTokens } from '../lib/format'
 
@@ -76,6 +81,31 @@ export function TopBar({
   const cost = run.calls.reduce((sum, call) => sum + (call.costUsd ?? 0), 0)
   const busy = run.status === 'running' || run.status === 'starting'
   const runMode = run.mode ?? 'real'
+  const runtimes = (
+    Object.entries(harness?.runtimes ?? {}) as [
+      HarnessKind,
+      { available: boolean; version?: string },
+    ][]
+  ).filter(([, runtime]) => runtime.available)
+  const runtimeLabel =
+    runtimes.length === 0
+      ? 'NO HARNESS'
+      : runtimes.length === 1
+        ? runtimes[0][0] === 'opencode'
+          ? 'OPENCODE'
+          : runtimes[0][0] === 'claude-code'
+            ? 'CLAUDE'
+            : 'CODEX'
+        : `${runtimes.length} CLIs`
+  const runtimeTitle =
+    runtimes.length > 0
+      ? runtimes
+          .map(
+            ([kind, runtime]) =>
+              `${HARNESS_LABELS[kind]} ${runtime.version ?? ''}`.trim(),
+          )
+          .join('\n')
+      : harness?.error ?? '未检测到 CLI'
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line/60 px-4">
@@ -95,7 +125,7 @@ export function TopBar({
             </span>
           </div>
           <p className="truncate font-kai text-[10px] tracking-[0.08em] text-mo-400">
-            Boss Agent 编排 · opencode harness · 实时报捷
+            Boss Agent 编排 · opencode / Claude / Codex · 实时报捷
           </p>
         </div>
 
@@ -131,14 +161,10 @@ export function TopBar({
                 ? 'border-song-400/20 text-song-300/80'
                 : 'border-yan-400/20 text-yan-300/80'
             }`}
-            title={
-              harness?.available
-                ? `opencode ${harness.version ?? ''}`
-                : harness?.error ?? '未检测到 opencode'
-            }
+            title={runtimeTitle}
           >
             <Terminal size={9} />
-            {harness?.available ? 'OPENCODE' : 'NO HARNESS'}
+            {runtimeLabel}
           </span>
           <span
             className={`chip ${

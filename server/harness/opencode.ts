@@ -2,35 +2,62 @@ import { execFile, spawn, type ChildProcess } from 'node:child_process'
 import { createInterface } from 'node:readline'
 import { promisify } from 'node:util'
 import { DEFAULT_MODEL } from '../../shared/presets'
-import type { HarnessStatus } from '../../shared/types'
+import type {
+  HarnessRuntimeStatus,
+  HarnessStatus,
+} from '../../shared/types'
+import type {
+  HarnessRunOptions,
+  HarnessRunResult,
+} from './types'
 
 const execFileAsync = promisify(execFile)
 
 let cachedStatus: { at: number; status: HarnessStatus } | null = null
+
+async function probeRuntime(
+  command: string,
+): Promise<HarnessRuntimeStatus> {
+  try {
+    const { stdout } = await execFileAsync(command, ['--version'], {
+      timeout: 10_000,
+    })
+    return { available: true, version: stdout.trim() }
+  } catch (error) {
+    return {
+      available: false,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
 
 export async function getHarnessStatus(force = false): Promise<HarnessStatus> {
   if (!force && cachedStatus && Date.now() - cachedStatus.at < 60_000) {
     return cachedStatus.status
   }
 
-  let status: HarnessStatus
-  try {
-    const { stdout } = await execFileAsync('opencode', ['--version'], {
-      timeout: 10_000,
-    })
-    status = {
-      available: true,
-      version: stdout.trim(),
-      defaultModel: DEFAULT_MODEL,
-      models: [],
-    }
-  } catch (error) {
-    status = {
-      available: false,
-      error: error instanceof Error ? error.message : String(error),
-      defaultModel: DEFAULT_MODEL,
-      models: [],
-    }
+  const [opencode, claude, codex] = await Promise.all([
+    probeRuntime('opencode'),
+    probeRuntime('claude'),
+    probeRuntime('codex'),
+  ])
+
+  const status: HarnessStatus = {
+    available:
+      opencode.available || claude.available || codex.available,
+    version: opencode.version,
+    error: opencode.error,
+    defaultModel: DEFAULT_MODEL,
+    models: [],
+    runtimes: {
+      opencode,
+      'claude-code': claude,
+      codex,
+      'openai-compatible': {
+        available: false,
+        error: '暂未接入直连 API',
+      },
+    },
   }
 
   cachedStatus = { at: Date.now(), status }
@@ -46,34 +73,6 @@ export async function deleteOpencodeSession(sessionId: string): Promise<boolean>
   } catch {
     return false
   }
-}
-
-export interface HarnessRunOptions {
-  prompt: string
-  cwd: string
-  model: string
-  title?: string
-  sessionId?: string
-  signal?: AbortSignal
-  timeoutMs?: number
-  maxSteps?: number
-  maxCostUsd?: number
-  env?: NodeJS.ProcessEnv
-  autoApprove?: boolean
-  onText?: (delta: string, fullText: string) => void
-  onTool?: (tool: string, status: string) => void
-}
-
-export interface HarnessRunResult {
-  text: string
-  tokens: number
-  costUsd: number
-  cacheReadTokens: number
-  cacheWriteTokens: number
-  toolCalls: number
-  sessionID?: string
-  error?: string
-  exitCode: number | null
 }
 
 interface ParsedEvent {

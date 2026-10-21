@@ -4,8 +4,11 @@ import type {
   CallNode,
   TeacherBrief,
 } from '../shared/types'
-import type { HarnessRunResult } from './harness/opencode'
-import { deleteOpencodeSession, runOpencode } from './harness/opencode'
+import {
+  deleteHarnessSession,
+  runHarnessCli,
+  type HarnessRunResult,
+} from './harness'
 import { proxyEnv } from './network'
 import type { RunHost } from './run-host'
 import { buildTeacherBrief } from './teacher-brief'
@@ -54,7 +57,9 @@ interface Usage {
 }
 
 function modelFor(agent: AgentConfig): string {
-  return agent.model.trim() || DEFAULT_MODEL
+  const model = agent.model.trim()
+  if (model) return model
+  return agent.harness === 'opencode' ? DEFAULT_MODEL : '(CLI 默认模型)'
 }
 
 function addCall(
@@ -210,7 +215,7 @@ ${workspaceFiles(host)}
 }
 
 function isSessionMissing(error: string): boolean {
-  return /session.*(not found|missing|expired|invalid)|no such session|unknown session/i.test(
+  return /no conversation found|session.*(not found|missing|expired|invalid)|thread.*(not found|missing|expired|invalid)|no such (session|thread)|unknown (session|thread)/i.test(
     error,
   )
 }
@@ -587,13 +592,6 @@ async function runHarness(
   onText?: (delta: string) => void,
   sessionId?: string,
 ): Promise<HarnessRunResult> {
-  if (agent.harness !== 'opencode') {
-    host.log(
-      `${agent.name} 配置的 harness 是 ${agent.harness}，真实模式目前只接入 opencode，本次仍使用 opencode。`,
-      'warn',
-    )
-  }
-
   const used = host.agentUsage.get(agent.id)?.costUsd ?? 0
   const remaining =
     agent.budgetUsd > 0
@@ -613,16 +611,24 @@ async function runHarness(
     }
   }
 
-  const result = await runOpencode({
+  const ephemeral =
+    agent.role !== 'boss' &&
+    host.settings.runtime.subagentSessionPolicy === 'delete'
+  const model =
+    agent.model.trim() ||
+    (agent.harness === 'opencode' ? DEFAULT_MODEL : '')
+
+  const result = await runHarnessCli(agent.harness, {
     prompt,
     cwd: host.snapshot.workspace,
-    model: modelFor(agent),
+    model,
     title: `${agent.name} · ${title}`,
     sessionId,
     signal: host.signal,
     maxSteps: agent.maxTurns > 0 ? agent.maxTurns : undefined,
     maxCostUsd: remaining,
     env: proxyEnv(host.settings.network),
+    ephemeral,
     timeoutMs:
       Math.max(1, host.settings.runtime.runTimeoutMinutes) * 60_000,
     onText,
@@ -679,9 +685,13 @@ async function runAgentCall(
 
   if (
     host.settings.runtime.subagentSessionPolicy === 'delete' &&
+    agent.harness === 'opencode' &&
     result.sessionID
   ) {
-    const deleted = await deleteOpencodeSession(result.sessionID)
+    const deleted = await deleteHarnessSession(
+      agent.harness,
+      result.sessionID,
+    )
     if (!deleted) {
       host.log(
         `${agent.name} 会话清理失败：${result.sessionID}`,
@@ -891,7 +901,7 @@ ${result.error}
 
 可能原因：
 
-- 当前模型不可用。\`${modelFor(boss)}\` 在部分地区会受到限制。
+- 当前模型不可用。\`${modelFor(boss)}\`（${boss.harness}）可能在部分地区受限，或 CLI 尚未登录。
 - opencode 未登录、网络不可达，或模型名称写错。
 - 工作区路径不存在或没有访问权限。
 
@@ -1181,7 +1191,7 @@ export async function realScenario(host: RunHost): Promise<void> {
 
   const usage: Usage = { tokens: 0, costUsd: 0 }
   host.log(
-    `真实模式启动：opencode harness · 工作区 ${host.snapshot.workspace} · 模型 ${modelFor(boss)} · 线程模式 ${host.threadMode}${host.bossSessionId ? ` · 会话 ${host.bossSessionId}` : ''}`,
+    `真实模式启动：${boss.harness} · 工作区 ${host.snapshot.workspace} · 模型 ${modelFor(boss)} · 线程模式 ${host.threadMode}${host.bossSessionId ? ` · 会话 ${host.bossSessionId}` : ''}`,
   )
   if (host.threadNotice) {
     host.emitBoss(`> ${host.threadNotice}\n\n`)

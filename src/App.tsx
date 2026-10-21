@@ -222,9 +222,10 @@ export default function App() {
   const teacherEnabled = config.agents.some(
     (agent) => agent.role === 'teacher' && agent.enabled,
   )
+  const bossAgent = config.agents.find((agent) => agent.role === 'boss')
   const bossModel =
-    config.agents.find((agent) => agent.role === 'boss')?.model ||
-    config.defaultModel
+    bossAgent?.model.trim() ||
+    (bossAgent?.harness === 'opencode' ? config.defaultModel : '')
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">
@@ -273,6 +274,7 @@ export default function App() {
           />
           <AgentSettings
             agents={config.agents}
+            harness={harness}
             onAdd={addAgent}
             onSave={saveAgent}
             onDelete={removeAgent}

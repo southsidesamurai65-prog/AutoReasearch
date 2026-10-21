@@ -9,6 +9,7 @@ import {
   Terminal,
   TriangleAlert,
 } from 'lucide-react'
+import { HARNESS_LABELS } from '../../shared/presets'
 import type { RunMode, ThreadInfo, ThreadMode } from '../../shared/types'
 import type { LiveStatus } from '../hooks/useRun'
 
@@ -144,7 +145,7 @@ export function PromptComposer({
                   }
                   title={
                     thread.active
-                      ? `复用 Boss 会话（${thread.turns} 轮，${thread.model ?? '未知模型'}），可命中缓存`
+                      ? `复用 Boss 会话（${thread.turns} 轮，${HARNESS_LABELS[thread.harness]}，${thread.model || 'CLI 默认模型'}），可命中缓存`
                       : '暂无历史会话，本次会自动新开，并带入项目记忆'
                   }
                 />

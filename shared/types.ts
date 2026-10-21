@@ -74,6 +74,7 @@ export interface RecentWorkspace {
 export interface ThreadInfo {
   active: boolean
   turns: number
+  harness: HarnessKind
   model: string | null
   lastUsedAt: string | null
   memoryChars: number
@@ -120,12 +121,19 @@ export interface FsListing {
   entries: FsEntry[]
 }
 
+export interface HarnessRuntimeStatus {
+  available: boolean
+  version?: string
+  error?: string
+}
+
 export interface HarnessStatus {
   available: boolean
   version?: string
   error?: string
   defaultModel: string
   models: string[]
+  runtimes: Partial<Record<HarnessKind, HarnessRuntimeStatus>>
 }
 
 export type RunStatus = 'running' | 'done' | 'error' | 'cancelled'

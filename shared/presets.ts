@@ -6,8 +6,8 @@ import type {
 } from './types'
 
 export const HARNESS_LABELS: Record<HarnessKind, string> = {
-  opencode: 'OpenCode Server',
-  'claude-code': 'Claude Code',
+  opencode: 'OpenCode',
+  'claude-code': 'Claude Code CLI',
   codex: 'Codex CLI',
   'openai-compatible': 'OpenAI 兼容 API',
 }

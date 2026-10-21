@@ -11,12 +11,17 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import type { HarnessKind, PublicAgentConfig } from '../../shared/types'
+import type {
+  HarnessKind,
+  HarnessStatus,
+  PublicAgentConfig,
+} from '../../shared/types'
 import { ALL_PRESETS, HARNESS_LABELS, ROLE_LABELS } from '../../shared/presets'
 import type { AgentPatch } from '../lib/api'
 
 interface AgentSettingsProps {
   agents: PublicAgentConfig[]
+  harness: HarnessStatus | null
   onAdd: (presetId?: string) => Promise<void>
   onSave: (id: string, patch: AgentPatch) => Promise<void>
   onDelete: (id: string) => Promise<void>
@@ -24,6 +29,7 @@ interface AgentSettingsProps {
 
 export function AgentSettings({
   agents,
+  harness,
   onAdd,
   onSave,
   onDelete,
@@ -113,6 +119,7 @@ export function AgentSettings({
           <AgentCard
             key={agent.id}
             agent={agent}
+            harness={harness}
             onSave={onSave}
             onDelete={onDelete}
           />
@@ -146,25 +153,38 @@ function toDraft(agent: PublicAgentConfig): Draft {
   }
 }
 
-function harnessHint(harness: HarnessKind): string {
+function harnessHint(
+  harness: HarnessKind,
+  status: HarnessStatus | null,
+): string {
   switch (harness) {
     case 'opencode':
-      return '使用本机 opencode harness 与登录态；Base URL / API Key 可留空。'
-    case 'claude-code':
-      return '真实模式暂未接入 Claude Code，会回退到 opencode。'
-    case 'codex':
-      return '真实模式暂未接入 Codex，会回退到 opencode。'
+      return '使用本机 opencode 与登录态；模型填 provider/model。'
+    case 'claude-code': {
+      const runtime = status?.runtimes?.['claude-code']
+      return runtime?.available
+        ? `Claude Code ${runtime.version ?? ''} 已就绪；模型可填 haiku / sonnet / 完整模型名。`
+        : `未检测到可用的 Claude Code${runtime?.error ? `：${runtime.error}` : '，请先安装并登录 claude'}。`
+    }
+    case 'codex': {
+      const runtime = status?.runtimes?.codex
+      return runtime?.available
+        ? `Codex ${runtime.version ?? ''} 已就绪；模型可留空使用 CLI 默认，或填 gpt-5.x。Codex 不支持费用硬上限，预算仅作统计。`
+        : `未检测到可用的 Codex${runtime?.error ? `：${runtime.error}` : '，请先安装并登录 codex'}。`
+    }
     case 'openai-compatible':
-      return '真实模式暂未接入直连 API，会回退到 opencode。'
+      return '直连 OpenAI 兼容 API 暂未接入，请使用 opencode、Claude Code 或 Codex。'
   }
 }
 
 function AgentCard({
   agent,
+  harness,
   onSave,
   onDelete,
 }: {
   agent: PublicAgentConfig
+  harness: HarnessStatus | null
   onSave: (id: string, patch: AgentPatch) => Promise<void>
   onDelete: (id: string) => Promise<void>
 }) {
@@ -290,7 +310,9 @@ function AgentCard({
               </span>
             </span>
             <span className="mt-0.5 block truncate font-mono text-[9px] text-mo-400">
-              {HARNESS_LABELS[agent.harness]} · {agent.model || '未设模型'}
+              {HARNESS_LABELS[agent.harness]} ·{' '}
+              {agent.model ||
+                (agent.harness === 'opencode' ? '未设模型' : 'CLI 默认')}
             </span>
           </span>
         </button>
@@ -349,16 +371,18 @@ function AgentCard({
                 }
                 className="field"
               >
-                {(Object.keys(HARNESS_LABELS) as HarnessKind[]).map((key) => (
-                  <option
-                    key={key}
-                    value={key}
-                    disabled={key !== 'opencode'}
-                  >
-                    {HARNESS_LABELS[key]}
-                    {key === 'opencode' ? '' : '（未接入）'}
-                  </option>
-                ))}
+                {(Object.keys(HARNESS_LABELS) as HarnessKind[]).map((key) => {
+                  const runtime = harness?.runtimes?.[key]
+                  const unavailable =
+                    key === 'openai-compatible' ||
+                    runtime?.available === false
+                  return (
+                    <option key={key} value={key} disabled={unavailable}>
+                      {HARNESS_LABELS[key]}
+                      {unavailable ? '（不可用）' : ''}
+                    </option>
+                  )
+                })}
               </select>
             </div>
             <div>
@@ -367,7 +391,13 @@ function AgentCard({
                 value={draft.model}
                 onChange={(event) => update('model', event.target.value)}
                 className="field font-mono text-[11px]"
-                placeholder="provider/model"
+                placeholder={
+                  draft.harness === 'opencode'
+                    ? 'provider/model'
+                    : draft.harness === 'claude-code'
+                      ? 'haiku / sonnet / 完整模型名，留空用默认'
+                      : 'gpt-5.x，留空用 CLI 默认'
+                }
               />
             </div>
           </div>
@@ -379,11 +409,11 @@ function AgentCard({
                 : 'text-ni-300/70'
             }`}
           >
-            {harnessHint(draft.harness)}
+            {harnessHint(draft.harness, harness)}
           </p>
 
           <div>
-            <label className="label">Base URL</label>
+            <label className="label">Base URL（预留）</label>
             <input
               value={draft.baseUrl}
               onChange={(event) => update('baseUrl', event.target.value)}
@@ -395,7 +425,7 @@ function AgentCard({
           <div>
             <label className="label flex items-center justify-between">
               <span className="flex items-center gap-1">
-                <KeyRound size={10} /> API Key
+                <KeyRound size={10} /> API Key（预留）
               </span>
               {agent.hasKey && (
                 <span className="font-mono text-[9px] text-song-300">
