@@ -104,7 +104,7 @@ export function FsBrowser({
         </button>
 
         <span
-          className="min-w-0 flex-1 truncate rounded bg-ink-900/70 px-2 py-1 font-mono text-[9.5px] text-slate-500"
+          className="min-w-0 flex-1 truncate rounded bg-ink-900/70 px-2 py-1 font-mono text-[9.5px] text-mo-500"
           title={listing?.path}
         >
           {listing?.path ?? '加载中…'}
@@ -115,7 +115,7 @@ export function FsBrowser({
             key={quick.path}
             type="button"
             onClick={() => void load(quick.path)}
-            className="shrink-0 rounded border border-line/70 px-1.5 py-1 text-[9px] text-slate-500 transition hover:border-accent/40 hover:text-accent"
+            className="shrink-0 rounded border border-line/70 px-1.5 py-1 text-[9px] text-mo-500 transition hover:border-accent/40 hover:text-accent"
             title={quick.path}
           >
             {quick.label}
@@ -125,20 +125,20 @@ export function FsBrowser({
 
       <div className="scroll-thin min-h-[220px] flex-1 overflow-y-auto p-1.5">
         {loading ? (
-          <div className="flex h-full min-h-[200px] items-center justify-center gap-2 text-[10.5px] text-slate-500">
+          <div className="flex h-full min-h-[200px] items-center justify-center gap-2 text-[10.5px] text-mo-500">
             <Loader2 size={13} className="animate-spin" />
             读取目录…
           </div>
         ) : error ? (
           <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 px-4 text-center">
-            <TriangleAlert size={15} className="text-amber-300" />
-            <p className="text-[10.5px] text-amber-200/80">{error}</p>
-            <p className="text-[9.5px] text-slate-600">
+            <TriangleAlert size={15} className="text-ni-300" />
+            <p className="text-[10.5px] text-ni-200/80">{error}</p>
+            <p className="text-[9.5px] text-mo-400">
               可以直接在上方输入框里填写完整路径。
             </p>
           </div>
         ) : entries.length === 0 ? (
-          <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-1 text-slate-600">
+          <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-1 text-mo-400">
             <Folder size={16} />
             <p className="text-[10.5px]">
               {mode === 'directory'
@@ -172,23 +172,23 @@ export function FsBrowser({
                     {isDirectory ? (
                       <Folder
                         size={13}
-                        className="shrink-0 text-amber-300/80"
+                        className="shrink-0 text-ni-300/80"
                       />
                     ) : (
                       <FileText
                         size={13}
-                        className="shrink-0 text-sky-300/70"
+                        className="shrink-0 text-dai-300/70"
                       />
                     )}
-                    <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300">
+                    <span className="min-w-0 flex-1 truncate text-[11px] text-mo-700">
                       {entry.name}
                     </span>
                     {isDirectory ? (
-                      <span className="font-mono text-[8.5px] text-slate-700">
+                      <span className="font-mono text-[8.5px] text-mo-300">
                         DIR
                       </span>
                     ) : (
-                      <span className="font-mono text-[8.5px] text-slate-600">
+                      <span className="font-mono text-[8.5px] text-mo-400">
                         {entry.size !== undefined
                           ? formatBytes(entry.size)
                           : entry.ext?.toUpperCase()}

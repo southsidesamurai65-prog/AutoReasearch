@@ -8,18 +8,18 @@ function ensureInitialised() {
   if (initialised) return
   mermaid.initialize({
     startOnLoad: false,
-    theme: 'dark',
+    theme: 'base',
     securityLevel: 'loose',
     fontFamily:
-      'ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif',
+      '"Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif',
     themeVariables: {
-      background: '#0a0f15',
-      primaryColor: '#111923',
-      primaryTextColor: '#e6edf7',
-      primaryBorderColor: '#2a3a4d',
-      lineColor: '#3a4a5e',
-      secondaryColor: '#16202c',
-      tertiaryColor: '#0d131b',
+      background: '#f7f2e3',
+      primaryColor: '#ece3cd',
+      primaryTextColor: '#2b2617',
+      primaryBorderColor: '#8a7a5f',
+      lineColor: '#6d6349',
+      secondaryColor: '#f2ebd8',
+      tertiaryColor: '#e8dfc9',
       fontSize: '13px',
     },
     flowchart: {
@@ -66,11 +66,11 @@ export function MermaidDiagram({ chart }: { chart: string }) {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5">
-        <p className="mb-1.5 flex items-center gap-1 text-[10px] text-amber-300">
+      <div className="rounded-lg border border-ni-500/20 bg-ni-500/5 p-2.5">
+        <p className="mb-1.5 flex items-center gap-1 text-[10px] text-ni-300">
           <TriangleAlert size={10} /> 图表渲染失败，已保留源码
         </p>
-        <pre className="scroll-thin overflow-x-auto font-mono text-[9.5px] leading-4 text-slate-500">
+        <pre className="scroll-thin overflow-x-auto font-mono text-[9.5px] leading-4 text-mo-500">
           {chart}
         </pre>
       </div>
@@ -79,7 +79,7 @@ export function MermaidDiagram({ chart }: { chart: string }) {
 
   if (!svg) {
     return (
-      <div className="flex h-40 items-center justify-center gap-2 rounded-lg border border-line/60 bg-ink-950/40 text-[10.5px] text-slate-500">
+      <div className="flex h-40 items-center justify-center gap-2 rounded-lg border border-line/60 bg-ink-950/40 text-[10.5px] text-mo-500">
         <Loader2 size={13} className="animate-spin" />
         正在绘制架构图…
       </div>

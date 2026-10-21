@@ -106,14 +106,14 @@ export function FileVault({
     <section className="panel shrink-0">
       <div className="panel-head">
         <div className="panel-title">
-          <Paperclip size={14} className="text-slate-400" />
+          <Paperclip size={14} className="text-mo-600" />
           文件寄存区
         </div>
         <button
           type="button"
           onClick={onOpenWorkspace}
           disabled={locked}
-          className="flex min-w-0 items-center gap-1.5 rounded-md border border-line/70 bg-ink-800/50 px-1.5 py-1 text-[9.5px] text-slate-500 transition hover:border-accent/30 hover:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex min-w-0 items-center gap-1.5 rounded-md border border-line/70 bg-ink-800/50 px-1.5 py-1 text-[9.5px] text-mo-500 transition hover:border-accent/30 hover:text-mo-700 disabled:cursor-not-allowed disabled:opacity-40"
           title={workspace.path}
         >
           <FolderOpen size={10} className="shrink-0 text-accent/70" />
@@ -156,7 +156,7 @@ export function FileVault({
           }
           handleDrop(event)
         }}
-        className={`relative flex min-h-[108px] flex-col transition ${
+        className={`relative flex min-h-[160px] flex-col transition ${
           dragging ? 'bg-accent/[0.06]' : ''
         }`}
       >
@@ -164,7 +164,7 @@ export function FileVault({
           <>
             <div className="flex items-center gap-1.5 px-2 pt-1.5">
               <p
-                className="min-w-0 flex-1 truncate font-mono text-[8.5px] text-slate-600"
+                className="min-w-0 flex-1 truncate font-mono text-[8.5px] text-mo-400"
                 title={workspace.path}
               >
                 {workspace.path}
@@ -185,22 +185,22 @@ export function FileVault({
             </div>
 
             {files.length > 0 ? (
-              <ul className="scroll-thin max-h-[170px] space-y-0.5 overflow-y-auto p-1.5">
+              <ul className="scroll-thin min-h-[150px] max-h-[320px] space-y-0.5 overflow-y-auto p-1.5">
                 {files.map((file) => (
                   <WorkspaceFileRow key={file.path} file={file} />
                 ))}
               </ul>
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-4 text-center">
-                <FolderOpen size={16} className="text-slate-600" />
-                <p className="text-[10.5px] text-slate-500">工作区还是空的</p>
-                <p className="text-[9.5px] leading-4 text-slate-600">
+                <FolderOpen size={16} className="text-mo-400" />
+                <p className="text-[10.5px] text-mo-500">工作区还是空的</p>
+                <p className="text-[9.5px] leading-4 text-mo-400">
                   Agent 会直接在这里读写文件；也可以换一个有资料的项目目录。
                 </p>
                 <button
                   type="button"
                   onClick={onOpenWorkspace}
-                  className="mt-0.5 rounded-md border border-line px-2 py-1 text-[9.5px] text-slate-400 transition hover:border-accent/40 hover:text-accent"
+                  className="mt-0.5 rounded-md border border-line px-2 py-1 text-[9.5px] text-mo-600 transition hover:border-accent/40 hover:text-accent"
                 >
                   选择工作区
                 </button>
@@ -210,14 +210,14 @@ export function FileVault({
         ) : (
           <>
             <div className="flex items-center gap-1.5 px-2 pt-1.5">
-              <p className="min-w-0 flex-1 truncate text-[9px] text-slate-600">
+              <p className="min-w-0 flex-1 truncate text-[9px] text-mo-400">
                 只读挂载到 .auto/refs，原文件不复制
               </p>
               <button
                 type="button"
                 onClick={onAddReference}
                 disabled={locked}
-                className="flex items-center gap-1 rounded-md border border-line px-1.5 py-1 text-[9.5px] text-slate-400 transition hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-md border border-line px-1.5 py-1 text-[9.5px] text-mo-600 transition hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plus size={9} /> 路径
               </button>
@@ -225,7 +225,7 @@ export function FileVault({
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={busy || locked}
-                className="flex items-center gap-1 rounded-md border border-line px-1.5 py-1 text-[9.5px] text-slate-400 transition hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-md border border-line px-1.5 py-1 text-[9.5px] text-mo-600 transition hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? (
                   <Loader2 size={9} className="animate-spin" />
@@ -237,7 +237,7 @@ export function FileVault({
             </div>
 
             {references.length > 0 ? (
-              <ul className="scroll-thin max-h-[170px] space-y-0.5 overflow-y-auto p-1.5">
+              <ul className="scroll-thin min-h-[150px] max-h-[320px] space-y-0.5 overflow-y-auto p-1.5">
                 {references.map((reference) => (
                   <ReferenceRow
                     key={reference.id}
@@ -249,11 +249,11 @@ export function FileVault({
               </ul>
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-4 text-center">
-                <FileLock2 size={16} className="text-slate-600" />
-                <p className="text-[10.5px] text-slate-500">
+                <FileLock2 size={16} className="text-mo-400" />
+                <p className="text-[10.5px] text-mo-500">
                   还没有外部引用
                 </p>
-                <p className="text-[9.5px] leading-4 text-slate-600">
+                <p className="text-[9.5px] leading-4 text-mo-400">
                   指向工作区外的论文、笔记或数据；只读，不会改动原文件。
                 </p>
               </div>
@@ -262,14 +262,14 @@ export function FileVault({
         )}
 
         {dragging && (
-          <div className="pointer-events-none absolute inset-1 z-10 flex items-center justify-center rounded-lg border border-accent/50 bg-ink-950/85 font-mono text-[10px] text-accent">
-            松手复制到 .auto/refs/uploads
+          <div className="pointer-events-none absolute inset-1 z-10 flex items-center justify-center rounded-lg border border-accent/60 bg-ink-900/95 font-kai text-[11px] tracking-[0.2em] text-accent">
+            松手移入 .auto/refs/uploads
           </div>
         )}
       </div>
 
       {error && (
-        <p className="flex items-center gap-1.5 border-t border-rose-500/20 bg-rose-500/5 px-3 py-1.5 text-[10px] text-rose-300">
+        <p className="flex items-center gap-1.5 border-t border-yan-500/20 bg-yan-500/5 px-3 py-1.5 text-[10px] text-yan-300">
           <TriangleAlert size={10} /> {error}
         </p>
       )}
@@ -306,15 +306,15 @@ function TabButton({
       className={`relative flex items-center gap-1 px-2 py-2 text-[10.5px] transition ${
         active
           ? accent
-            ? 'text-sky-300'
-            : 'text-slate-200'
-          : 'text-slate-600 hover:text-slate-400'
+            ? 'text-dai-300'
+            : 'text-mo-800'
+          : 'text-mo-400 hover:text-mo-600'
       }`}
     >
       {label}
       <span
         className={`rounded-full px-1 font-mono text-[8.5px] ${
-          active ? 'bg-ink-700 text-slate-300' : 'bg-ink-850 text-slate-600'
+          active ? 'bg-ink-700 text-mo-700' : 'bg-ink-850 text-mo-400'
         }`}
       >
         {count}
@@ -322,7 +322,7 @@ function TabButton({
       {active && (
         <span
           className={`absolute inset-x-1 bottom-0 h-px ${
-            accent ? 'bg-sky-400/70' : 'bg-accent/70'
+            accent ? 'bg-dai-400/70' : 'bg-accent/70'
           }`}
         />
       )}
@@ -343,12 +343,12 @@ function WorkspaceFileRow({ file }: { file: WorkspaceFile }) {
 
   const tone =
     kind === 'code'
-      ? 'text-teal-300'
+      ? 'text-song-300'
       : kind === 'image'
-        ? 'text-violet-300'
+        ? 'text-lian-300'
         : kind === 'data'
-          ? 'text-amber-300'
-          : 'text-sky-300'
+          ? 'text-ni-300'
+          : 'text-dai-300'
 
   const slash = file.path.lastIndexOf('/')
   const directory = slash >= 0 ? file.path.slice(0, slash + 1) : ''
@@ -357,14 +357,14 @@ function WorkspaceFileRow({ file }: { file: WorkspaceFile }) {
     <li className="flex items-center gap-2 rounded-md px-1.5 py-1.5 transition hover:bg-ink-850/70">
       <Icon size={12} className={`shrink-0 ${tone}`} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[10.5px] text-slate-300" title={file.path}>
+        <p className="truncate text-[10.5px] text-mo-700" title={file.path}>
           {directory && (
-            <span className="text-slate-600">{directory}</span>
+            <span className="text-mo-400">{directory}</span>
           )}
           {file.name}
         </p>
       </div>
-      <span className="shrink-0 font-mono text-[8.5px] text-slate-600">
+      <span className="shrink-0 font-mono text-[8.5px] text-mo-400">
         {formatBytes(file.size)}
       </span>
     </li>
@@ -389,20 +389,20 @@ function ReferenceRow({
       <FileLock2
         size={12}
         className={`shrink-0 ${
-          reference.exists ? 'text-sky-300/80' : 'text-rose-300/80'
+          reference.exists ? 'text-dai-300/80' : 'text-yan-300/80'
         }`}
       />
       <div className="min-w-0 flex-1">
         <p
-          className="truncate text-[10.5px] text-slate-300"
+          className="truncate text-[10.5px] text-mo-700"
           title={reference.sourcePath}
         >
           {reference.name}
         </p>
-        <p className="flex items-center gap-1.5 font-mono text-[8.5px] text-slate-600">
+        <p className="flex items-center gap-1.5 font-mono text-[8.5px] text-mo-400">
           <span
             className={
-              reference.exists ? 'text-sky-300/50' : 'text-rose-300/80'
+              reference.exists ? 'text-dai-300/50' : 'text-yan-300/80'
             }
           >
             {reference.exists
@@ -415,7 +415,7 @@ function ReferenceRow({
           <span>{formatBytes(reference.size)}</span>
         </p>
       </div>
-      <LockKeyhole size={9} className="shrink-0 text-slate-700" />
+      <LockKeyhole size={9} className="shrink-0 text-mo-300" />
       <button
         type="button"
         onClick={onRemove}

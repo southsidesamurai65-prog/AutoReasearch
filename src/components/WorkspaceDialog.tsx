@@ -83,7 +83,7 @@ export function WorkspaceDialog({
             </button>
           </div>
           {error && (
-            <p className="flex items-center gap-1.5 text-[10px] text-rose-300">
+            <p className="flex items-center gap-1.5 text-[10px] text-yan-300">
               <TriangleAlert size={10} /> {error}
             </p>
           )}
@@ -94,12 +94,12 @@ export function WorkspaceDialog({
         <div className="space-y-2">
           <div className="rounded-lg border border-line/70 bg-ink-950/40 p-2.5">
             <p className="panel-kicker mb-1.5">当前工作区</p>
-            <p className="flex items-center gap-1.5 text-[11px] text-slate-200">
+            <p className="flex items-center gap-1.5 text-[11px] text-mo-800">
               <FolderGit2 size={12} className="text-accent/80" />
               <span className="truncate">{current.workspace.name}</span>
             </p>
             <p
-              className="mt-0.5 truncate font-mono text-[9px] text-slate-600"
+              className="mt-0.5 truncate font-mono text-[9px] text-mo-400"
               title={current.workspace.path}
             >
               {current.workspace.path}
@@ -117,7 +117,7 @@ export function WorkspaceDialog({
           </p>
           <div className="scroll-thin max-h-[210px] space-y-1 overflow-y-auto pr-1">
             {current.recent.length === 0 ? (
-              <p className="px-1 text-[10px] text-slate-600">
+              <p className="px-1 text-[10px] text-mo-400">
                 还没有最近工作区
               </p>
             ) : (
@@ -133,10 +133,10 @@ export function WorkspaceDialog({
                   className="w-full rounded-md border border-transparent px-2 py-1.5 text-left transition hover:border-line hover:bg-ink-850/70 disabled:opacity-50"
                   title={item.path}
                 >
-                  <p className="truncate text-[10.5px] text-slate-300">
+                  <p className="truncate text-[10.5px] text-mo-700">
                     {item.name}
                   </p>
-                  <p className="truncate font-mono text-[8.5px] text-slate-600">
+                  <p className="truncate font-mono text-[8.5px] text-mo-400">
                     {item.path}
                   </p>
                 </button>

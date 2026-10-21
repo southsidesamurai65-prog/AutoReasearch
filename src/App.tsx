@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
 import type {
   AppConfig,
   HarnessStatus,
@@ -179,11 +179,13 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/30 bg-accent/10">
-          <Loader2 size={17} className="animate-spin text-accent" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-[5px] border border-[#8f2f26] bg-gradient-to-b from-[#bc453c] to-[#a13329] shadow-seal">
+          <span className="text-[18px] leading-none font-kai text-[#f8efe0]">
+            研
+          </span>
         </div>
-        <p className="font-mono text-[10px] tracking-[0.2em] text-slate-600">
-          BOOTING AUTO RESEARCH CONSOLE
+        <p className="font-kai text-[11px] tracking-[0.45em] text-mo-500">
+          研墨 · 铺纸 · 开台
         </p>
       </div>
     )
@@ -192,11 +194,11 @@ export default function App() {
   if (loadError || !config || !workspaceState) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-400/10">
-          <TriangleAlert size={17} className="text-rose-300" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-yan-400/30 bg-yan-400/10">
+          <TriangleAlert size={17} className="text-yan-300" />
         </div>
-        <p className="text-[13px] text-slate-300">后端还没准备好</p>
-        <p className="max-w-md text-[11px] leading-5 text-slate-500">
+        <p className="text-[13px] text-mo-700">后端还没准备好</p>
+        <p className="max-w-md text-[11px] leading-5 text-mo-500">
           {loadError ?? '配置为空'}。请确认{' '}
           <code className="text-accent">npm run dev</code> 已同时启动 server 与
           web。
@@ -230,7 +232,7 @@ export default function App() {
       />
 
       <main className="grid min-h-0 flex-1 gap-3 p-3 lg:grid-cols-[396px_minmax(0,1fr)] xl:grid-cols-[420px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col gap-3">
+        <aside className="scroll-thin flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
           <FileVault
             workspace={workspaceState.workspace}
             files={workspaceFiles}
@@ -268,7 +270,7 @@ export default function App() {
           />
         </aside>
 
-        <div className="grid min-h-0 gap-3 lg:grid-rows-[minmax(170px,0.82fr)_minmax(190px,1fr)_minmax(240px,1.25fr)]">
+        <div className="scroll-thin flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
           <CallTree calls={run.calls} active={run.status === 'running'} />
           <BossReport report={run.report} status={run.status} />
           <TeacherPanel

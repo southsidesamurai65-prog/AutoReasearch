@@ -83,7 +83,7 @@ export function PromptComposer({
             }
           }}
           placeholder={`告诉所长你想研究什么。工作区「${workspaceName}」会直接交给 harness…`}
-          className="field scroll-thin min-h-[88px] max-h-40 resize-y bg-ink-950/60 text-[12.5px] leading-6"
+          className="field scroll-thin min-h-[132px] max-h-[280px] resize-y bg-ink-950/60 text-[12.5px] leading-6"
           disabled={starting}
         />
 
@@ -94,7 +94,7 @@ export function PromptComposer({
               type="button"
               onClick={() => setPrompt(sample)}
               disabled={running || starting}
-              className="max-w-full truncate rounded-full border border-line/80 bg-ink-850/70 px-2 py-1 text-[10px] text-slate-500 transition hover:border-slate-600 hover:text-slate-300 disabled:opacity-40"
+              className="max-w-full truncate rounded-full border border-line/80 bg-ink-850/70 px-2 py-1 text-[10px] text-mo-500 transition hover:border-mo-400 hover:text-mo-700 disabled:opacity-40"
             >
               {sample}
             </button>
@@ -102,7 +102,7 @@ export function PromptComposer({
         </div>
 
         {error && (
-          <div className="mt-2 flex items-start gap-2 rounded-lg border border-rose-500/20 bg-rose-500/5 px-2.5 py-2 text-[10.5px] leading-4 text-rose-300">
+          <div className="mt-2 flex items-start gap-2 rounded-lg border border-yan-500/20 bg-yan-500/5 px-2.5 py-2 text-[10.5px] leading-4 text-yan-300">
             <TriangleAlert size={12} className="mt-0.5 shrink-0" />
             {error}
           </div>
@@ -191,7 +191,7 @@ export function PromptComposer({
           )}
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2 font-mono text-[8.5px] text-slate-700">
+        <div className="mt-2 flex items-center justify-between gap-2 font-mono text-[8.5px] text-mo-300">
           <span className="truncate">
             {workspaceFileCount} 工作区 · {refCount} 引用 · {agentCount} 代理
           </span>
@@ -228,7 +228,7 @@ function ModeButton({
       className={`flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[8.5px] transition disabled:cursor-not-allowed disabled:opacity-35 ${
         active
           ? 'bg-accent/15 text-accent'
-          : 'text-slate-600 hover:text-slate-400'
+          : 'text-mo-400 hover:text-mo-600'
       }`}
     >
       {icon}

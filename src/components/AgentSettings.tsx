@@ -46,17 +46,17 @@ export function AgentSettings({
   }
 
   return (
-    <section className="panel min-h-[300px] flex-1 lg:min-h-0">
+    <section className="panel min-h-[460px] flex-1 lg:min-h-[520px]">
       <div className="panel-head">
         <div className="panel-title">
-          <Users size={14} className="text-slate-400" />
+          <Users size={14} className="text-mo-600" />
           子代理编排
           <span className="chip">{agents.length}</span>
         </div>
         <button
           type="button"
           onClick={() => setShowAdd((value) => !value)}
-          className="flex items-center gap-1 rounded-md border border-line bg-ink-800/60 px-2 py-1 text-[10.5px] text-slate-400 transition hover:border-accent/40 hover:text-accent"
+          className="flex items-center gap-1 rounded-md border border-line bg-ink-800/60 px-2 py-1 text-[10.5px] text-mo-600 transition hover:border-accent/40 hover:text-accent"
         >
           {showAdd ? <X size={10} /> : <Plus size={10} />}
           {showAdd ? '收起' : '添加'}
@@ -80,13 +80,13 @@ export function AgentSettings({
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
                     style={{ background: preset.color }}
                   />
-                  <span className="text-[11.5px] text-slate-200">
+                  <span className="text-[11.5px] text-mo-800">
                     {preset.name}
                   </span>
                   <span className="chip">
                     {ROLE_LABELS[preset.role]}
                   </span>
-                  <span className="ml-auto truncate font-mono text-[9px] text-slate-600">
+                  <span className="ml-auto truncate font-mono text-[9px] text-mo-400">
                     {adding === preset.id ? '添加中…' : HARNESS_LABELS[preset.harness]}
                   </span>
                 </button>
@@ -96,14 +96,14 @@ export function AgentSettings({
               type="button"
               onClick={() => void add(undefined)}
               disabled={adding !== null}
-              className="flex w-full items-center gap-2 rounded-md border border-dashed border-line px-1.5 py-1.5 text-[11px] text-slate-500 transition hover:border-accent/40 hover:text-slate-300 disabled:opacity-50"
+              className="flex w-full items-center gap-2 rounded-md border border-dashed border-line px-1.5 py-1.5 text-[11px] text-mo-500 transition hover:border-accent/40 hover:text-mo-700 disabled:opacity-50"
             >
               <Plus size={11} />
               {adding === 'custom' ? '添加中…' : '空白自定义 Agent'}
             </button>
           </div>
           {error && (
-            <p className="mt-1 px-1 text-[10px] text-rose-300">{error}</p>
+            <p className="mt-1 px-1 text-[10px] text-yan-300">{error}</p>
           )}
         </div>
       )}
@@ -274,12 +274,12 @@ function AgentCard({
             className="h-2 w-2 shrink-0 rounded-full"
             style={{
               background: agent.color,
-              boxShadow: `0 0 8px -1px ${agent.color}`,
+              boxShadow: `0 0 0 2.5px ${agent.color}22, 0 1px 2px -1px ${agent.color}88`,
             }}
           />
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5">
-              <span className="truncate text-[11.5px] font-medium text-slate-100">
+              <span className="truncate text-[11.5px] font-medium text-mo-900">
                 {agent.name}
               </span>
               <span
@@ -289,7 +289,7 @@ function AgentCard({
                 {ROLE_LABELS[agent.role]}
               </span>
             </span>
-            <span className="mt-0.5 block truncate font-mono text-[9px] text-slate-600">
+            <span className="mt-0.5 block truncate font-mono text-[9px] text-mo-400">
               {HARNESS_LABELS[agent.harness]} · {agent.model || '未设模型'}
             </span>
           </span>
@@ -311,7 +311,7 @@ function AgentCard({
             className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition-all ${
               agent.enabled
                 ? 'left-3 bg-accent'
-                : 'left-0.5 bg-slate-600'
+                : 'left-0.5 bg-mo-300'
             }`}
           />
         </button>
@@ -375,8 +375,8 @@ function AgentCard({
           <p
             className={`text-[9.5px] leading-4 ${
               draft.harness === 'opencode'
-                ? 'text-slate-600'
-                : 'text-amber-300/70'
+                ? 'text-mo-400'
+                : 'text-ni-300/70'
             }`}
           >
             {harnessHint(draft.harness)}
@@ -398,7 +398,7 @@ function AgentCard({
                 <KeyRound size={10} /> API Key
               </span>
               {agent.hasKey && (
-                <span className="font-mono text-[9px] text-teal-300">
+                <span className="font-mono text-[9px] text-song-300">
                   已保存
                 </span>
               )}
@@ -466,7 +466,7 @@ function AgentCard({
           </div>
 
           {error && (
-            <p className="rounded border border-rose-500/20 bg-rose-500/5 px-2 py-1 text-[10px] text-rose-300">
+            <p className="rounded border border-yan-500/20 bg-yan-500/5 px-2 py-1 text-[10px] text-yan-300">
               {error}
             </p>
           )}
@@ -499,7 +499,7 @@ function AgentCard({
             )}
           </div>
 
-          <div className="flex items-center gap-1 font-mono text-[8.5px] text-slate-700">
+          <div className="flex items-center gap-1 font-mono text-[8.5px] text-mo-300">
             <Bot size={8} />
             {agent.id} · {agent.enabled ? 'ENABLED' : 'DISABLED'} ·{' '}
             {agent.maxTurns}T

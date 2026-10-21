@@ -31,11 +31,11 @@ const STATUS_TEXT: Record<CallStatus, string> = {
 }
 
 const STATUS_TONE: Record<CallStatus, string> = {
-  queued: 'text-slate-500',
+  queued: 'text-mo-500',
   running: 'text-accent',
-  done: 'text-teal-300',
-  error: 'text-rose-300',
-  cancelled: 'text-slate-500',
+  done: 'text-song-300',
+  error: 'text-yan-300',
+  cancelled: 'text-mo-500',
 }
 
 function StatusIcon({ status, color }: { status: CallStatus; color: string }) {
@@ -52,12 +52,12 @@ function StatusIcon({ status, color }: { status: CallStatus; color: string }) {
     return <CheckCircle2 size={12} style={{ color }} />
   }
   if (status === 'error') {
-    return <XCircle size={12} className="text-rose-400" />
+    return <XCircle size={12} className="text-yan-400" />
   }
   if (status === 'cancelled') {
-    return <Ban size={11} className="text-slate-500" />
+    return <Ban size={11} className="text-mo-500" />
   }
-  return <CircleDashed size={12} className="text-slate-600" />
+  return <CircleDashed size={12} className="text-mo-400" />
 }
 
 export function CallTree({ calls, active }: CallTreeProps) {
@@ -75,10 +75,10 @@ export function CallTree({ calls, active }: CallTreeProps) {
   const running = calls.filter((call) => call.status === 'running').length
 
   return (
-    <section className="panel min-h-0">
+    <section className="panel h-[clamp(340px,44vh,560px)] shrink-0">
       <div className="panel-head">
         <div className="panel-title">
-          <Network size={14} className="text-slate-400" />
+          <Network size={14} className="text-mo-600" />
           调用链
           <span className="chip">{calls.length}</span>
           {active && running > 0 && (
@@ -88,7 +88,7 @@ export function CallTree({ calls, active }: CallTreeProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 font-mono text-[9px] text-slate-600">
+        <div className="flex items-center gap-2 font-mono text-[9px] text-mo-400">
           {running > 0 && (
             <span className="text-accent/70">{running} running</span>
           )}
@@ -102,10 +102,10 @@ export function CallTree({ calls, active }: CallTreeProps) {
         {calls.length === 0 ? (
           <div className="flex h-full min-h-[110px] flex-col items-center justify-center gap-2 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line/70 bg-ink-850/60">
-              <Network size={15} className="text-slate-600" />
+              <Network size={15} className="text-mo-400" />
             </div>
-            <p className="text-[11px] text-slate-500">调用链会在这里生长</p>
-            <p className="max-w-[260px] text-[10px] leading-4 text-slate-600">
+            <p className="text-[11px] text-mo-500">调用链会在这里生长</p>
+            <p className="max-w-[260px] text-[10px] leading-4 text-mo-400">
               启动研究后，Boss 每次委派子代理都会生成一个节点，可查看任务、耗时与开销。
             </p>
           </div>
@@ -149,7 +149,7 @@ function TreeItem({
       >
         <div className="flex items-center gap-1.5">
           <StatusIcon status={node.status} color={node.color} />
-          <span className="truncate text-[11.5px] font-medium text-slate-100">
+          <span className="truncate text-[11.5px] font-medium text-mo-900">
             {node.agentName}
           </span>
           <span
@@ -164,7 +164,7 @@ function TreeItem({
           </span>
           {node.toolCalls !== undefined && node.toolCalls > 0 && (
             <span
-              className="flex items-center gap-0.5 font-mono text-[8px] text-slate-600"
+              className="flex items-center gap-0.5 font-mono text-[8px] text-mo-400"
               title={`${node.toolCalls} 次工具调用`}
             >
               <Wrench size={8} />
@@ -192,19 +192,19 @@ function TreeItem({
         </div>
 
         <p
-          className="mt-0.5 truncate text-[10px] text-slate-500"
+          className="mt-0.5 truncate text-[10px] text-mo-500"
           title={node.task}
         >
           {node.task}
         </p>
 
         {node.summary && (
-          <p className="mt-0.5 line-clamp-1 text-[9.5px] text-slate-600">
+          <p className="mt-0.5 line-clamp-1 text-[9.5px] text-mo-400">
             ↳ {node.summary}
           </p>
         )}
 
-        <div className="mt-1 flex items-center gap-2.5 font-mono text-[8.5px] text-slate-700">
+        <div className="mt-1 flex items-center gap-2.5 font-mono text-[8.5px] text-mo-300">
           <span>{formatDuration(node)}</span>
           {node.tokens !== undefined && <span>{node.tokens} tok</span>}
           {node.costUsd !== undefined && (
@@ -214,7 +214,7 @@ function TreeItem({
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="ml-auto text-[8px] text-slate-600 transition hover:text-accent"
+              className="ml-auto text-[8px] text-mo-400 transition hover:text-accent"
             >
               展开输出
             </button>
@@ -222,7 +222,7 @@ function TreeItem({
         </div>
 
         {open && node.output && (
-          <pre className="scroll-thin mt-1.5 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-md border border-line/60 bg-ink-950/70 p-2 font-mono text-[9px] leading-4 text-slate-400">
+          <pre className="scroll-thin mt-1.5 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-md border border-line/60 bg-ink-950/70 p-2 font-mono text-[9px] leading-4 text-mo-600">
             {node.output}
           </pre>
         )}

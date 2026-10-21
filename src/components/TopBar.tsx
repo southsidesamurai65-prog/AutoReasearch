@@ -4,7 +4,6 @@ import {
   Cpu,
   FolderOpen,
   RotateCcw,
-  Sparkles,
   Terminal,
 } from 'lucide-react'
 import type { HarnessStatus, WorkspaceInfo } from '../../shared/types'
@@ -17,13 +16,13 @@ const STATUS: Record<
 > = {
   idle: {
     label: '待命',
-    dot: 'bg-slate-500',
-    className: 'border-line bg-ink-800/60 text-slate-400',
+    dot: 'bg-mo-400',
+    className: 'border-mo-300/80 bg-ink-850/70 text-mo-500',
   },
   starting: {
     label: '启动中',
-    dot: 'bg-amber-300 animate-pulse-soft',
-    className: 'border-amber-400/30 bg-amber-400/10 text-amber-200',
+    dot: 'bg-ni-300 animate-pulse-soft',
+    className: 'border-ni-300/40 bg-ni-300/10 text-ni-300',
   },
   running: {
     label: '研究中',
@@ -32,18 +31,18 @@ const STATUS: Record<
   },
   done: {
     label: '已完成',
-    dot: 'bg-teal-300',
-    className: 'border-teal-400/30 bg-teal-400/10 text-teal-200',
+    dot: 'bg-song-300',
+    className: 'border-song-300/40 bg-song-300/10 text-song-300',
   },
   cancelled: {
     label: '已取消',
-    dot: 'bg-slate-400',
-    className: 'border-line bg-ink-800/60 text-slate-400',
+    dot: 'bg-mo-400',
+    className: 'border-mo-300/80 bg-ink-850/70 text-mo-500',
   },
   error: {
     label: '异常',
-    dot: 'bg-rose-400',
-    className: 'border-rose-400/30 bg-rose-400/10 text-rose-200',
+    dot: 'bg-yan-300',
+    className: 'border-yan-300/40 bg-yan-300/10 text-yan-300',
   },
 }
 
@@ -75,21 +74,22 @@ export function TopBar({
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line/60 px-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent/10">
-          <Sparkles size={15} className="text-accent" />
-          <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_2px_rgba(200,255,77,0.55)]" />
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[5px] border border-[#8f2f26] bg-gradient-to-b from-[#bc453c] to-[#a13329] shadow-seal">
+          <span className="font-kai text-[17px] leading-none text-[#f8efe0]">
+            研
+          </span>
         </div>
         <div className="min-w-0">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[14px] font-bold tracking-[0.16em] text-white">
-              AUTO
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-[15px] font-semibold tracking-[0.28em] text-mo-950">
+              自动科研台
             </span>
-            <span className="hidden text-[11px] text-slate-500 sm:inline">
-              / 自动科研台
+            <span className="hidden font-kai text-[10px] tracking-[0.2em] text-mo-400 sm:inline">
+              格物 · 究理 · 自成文章
             </span>
           </div>
-          <p className="truncate text-[10px] text-slate-600">
-            Boss Agent 编排 · opencode harness · 实时汇报
+          <p className="truncate font-kai text-[10px] tracking-[0.08em] text-mo-400">
+            Boss Agent 编排 · opencode harness · 实时报捷
           </p>
         </div>
 
@@ -98,16 +98,16 @@ export function TopBar({
           onClick={onOpenWorkspace}
           disabled={busy}
           title={`${workspace.path}${workspace.writable ? '' : '（只读）'}`}
-          className="ml-1 flex min-w-0 items-center gap-1.5 rounded-lg border border-line bg-ink-900/70 px-2 py-1.5 text-[10px] text-slate-400 transition hover:border-accent/30 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+          className="ml-1 flex min-w-0 items-center gap-1.5 rounded-lg border border-line bg-ink-900/70 px-2 py-1.5 text-[10px] text-mo-600 transition hover:border-accent/30 hover:text-mo-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <FolderOpen size={11} className="shrink-0 text-accent/70" />
           <span className="max-w-[120px] truncate lg:max-w-[180px]">
             {workspace.name}
           </span>
-          <span className="hidden font-mono text-[8px] text-slate-600 xl:inline">
-            WORKSPACE
+          <span className="hidden font-kai text-[9px] tracking-[0.2em] text-mo-400 xl:inline">
+            工作区
           </span>
-          <ChevronDown size={10} className="shrink-0 text-slate-600" />
+          <ChevronDown size={10} className="shrink-0 text-mo-400" />
         </button>
       </div>
 
@@ -122,8 +122,8 @@ export function TopBar({
           <span
             className={`chip ${
               harness?.available
-                ? 'border-teal-400/20 text-teal-300/80'
-                : 'border-rose-400/20 text-rose-300/80'
+                ? 'border-song-400/20 text-song-300/80'
+                : 'border-yan-400/20 text-yan-300/80'
             }`}
             title={
               harness?.available
@@ -138,7 +138,7 @@ export function TopBar({
             className={`chip ${
               runMode === 'real'
                 ? 'border-accent/25 text-accent/80'
-                : 'border-amber-400/25 text-amber-300/80'
+                : 'border-ni-400/25 text-ni-300/80'
             }`}
           >
             {runMode === 'real' ? 'REAL' : 'MOCK'}
@@ -146,7 +146,7 @@ export function TopBar({
         </div>
 
         {run.calls.length > 0 && (
-          <div className="hidden items-center gap-2 rounded-full border border-line/70 bg-ink-900/70 px-2.5 py-1 font-mono text-[10px] text-slate-500 md:flex">
+          <div className="hidden items-center gap-2 rounded-full border border-line/70 bg-ink-900/70 px-2.5 py-1 font-mono text-[10px] text-mo-500 md:flex">
             <span>{formatTokens(tokens)} tok</span>
             <span className="h-2.5 w-px bg-line" />
             <span>{formatCost(cost)}</span>

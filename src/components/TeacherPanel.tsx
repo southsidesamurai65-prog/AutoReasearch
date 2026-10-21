@@ -28,17 +28,17 @@ export function TeacherPanel({
   }, [brief?.title])
 
   return (
-    <section className="panel min-h-0 flex-1">
+    <section className="panel h-[clamp(500px,66vh,860px)] shrink-0">
       <div className="panel-head">
         <div className="panel-title">
-          <GraduationCap size={14} className="text-pink-300" />
+          <GraduationCap size={14} className="text-fen-300" />
           教师 Agent
-          <span className="chip border-pink-400/20 text-pink-300/80">
+          <span className="chip border-fen-400/20 text-fen-300/80">
             零基础图解
           </span>
         </div>
-        <span className="font-mono text-[9px] text-slate-600">
-          {brief ? 'BRIEF READY' : running ? 'PREPARING' : 'AUTO BRIEF'}
+        <span className="panel-kicker">
+          {brief ? '讲义已备' : running ? '正在备课' : '自动讲义'}
         </span>
       </div>
 
@@ -49,16 +49,16 @@ export function TeacherPanel({
         {brief ? (
           <div className="space-y-3.5">
             <div>
-              <h2 className="text-[15px] font-semibold tracking-tight text-white">
+              <h2 className="text-[15px] font-semibold tracking-tight text-mo-950">
                 {brief.title}
               </h2>
-              <p className="mt-1 text-[11.5px] leading-5 text-slate-400">
+              <p className="mt-1 text-[11.5px] leading-5 text-mo-600">
                 {brief.intro}
               </p>
             </div>
 
             <div>
-              <p className="mb-1.5 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-slate-500">
+              <p className="mb-1.5 flex items-center gap-1.5 font-kai text-[10px] tracking-[0.3em] text-mo-500">
                 <Workflow size={10} /> 一张图看懂
               </p>
               <MermaidDiagram chart={brief.mermaid} />
@@ -67,14 +67,14 @@ export function TeacherPanel({
             <div className="space-y-3">
               {brief.sections.map((section, index) => (
                 <div key={section.heading} className="flex gap-2.5">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line bg-ink-850 font-mono text-[9px] text-slate-500">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line bg-ink-850 font-mono text-[9px] text-mo-500">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-[12px] font-semibold text-slate-100">
+                    <h3 className="text-[12px] font-semibold text-mo-900">
                       {section.heading}
                     </h3>
-                    <p className="mt-0.5 text-[11px] leading-[1.75] text-slate-400">
+                    <p className="mt-0.5 text-[11px] leading-[1.75] text-mo-600">
                       {section.body}
                     </p>
                   </div>
@@ -83,7 +83,7 @@ export function TeacherPanel({
             </div>
 
             <div className="rounded-lg border border-line/60 bg-ink-850/40 p-2.5">
-              <p className="mb-2 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-slate-500">
+              <p className="mb-2 flex items-center gap-1.5 font-kai text-[10px] tracking-[0.3em] text-mo-500">
                 <BookOpen size={10} /> 术语小抄
               </p>
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
@@ -95,7 +95,7 @@ export function TeacherPanel({
                     <p className="font-mono text-[9.5px] text-accent/80">
                       {item.term}
                     </p>
-                    <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
+                    <p className="mt-0.5 text-[10px] leading-4 text-mo-500">
                       {item.meaning}
                     </p>
                   </div>
@@ -105,9 +105,9 @@ export function TeacherPanel({
           </div>
         ) : running ? (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 rounded-lg border border-pink-400/15 bg-pink-400/[0.04] px-2.5 py-2">
-              <Lightbulb size={13} className="text-pink-300" />
-              <p className="text-[10.5px] text-pink-200/80">
+            <div className="flex items-center gap-2 rounded-lg border border-fen-400/15 bg-fen-400/[0.04] px-2.5 py-2">
+              <Lightbulb size={13} className="text-fen-300" />
+              <p className="text-[10.5px] text-fen-200/80">
                 教师 Agent 正在把架构翻译成人话…
               </p>
             </div>
@@ -122,20 +122,20 @@ export function TeacherPanel({
         ) : status === 'done' && !hasTeacher ? (
           <div className="flex h-full min-h-[140px] flex-col items-center justify-center gap-2 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line/70 bg-ink-850/60">
-              <GraduationCap size={15} className="text-slate-600" />
+              <GraduationCap size={15} className="text-mo-400" />
             </div>
-            <p className="text-[11px] text-slate-500">教师 Agent 未启用</p>
-            <p className="max-w-[290px] text-[10px] leading-4 text-slate-600">
+            <p className="text-[11px] text-mo-500">教师 Agent 未启用</p>
+            <p className="max-w-[290px] text-[10px] leading-4 text-mo-400">
               在左侧「子代理编排」里开启教师 Agent，下一次研究就会自动生成架构图与通俗讲解。
             </p>
           </div>
         ) : (
           <div className="flex h-full min-h-[150px] flex-col items-center justify-center gap-2 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line/70 bg-ink-850/60">
-              <GraduationCap size={15} className="text-slate-600" />
+              <GraduationCap size={15} className="text-mo-400" />
             </div>
-            <p className="text-[11px] text-slate-500">完成一次研究后，我来给你讲</p>
-            <p className="max-w-[300px] text-[10px] leading-4 text-slate-600">
+            <p className="text-[11px] text-mo-500">完成一次研究后，我来给你讲</p>
+            <p className="max-w-[300px] text-[10px] leading-4 text-mo-400">
               这里会生成一张项目架构图，用比喻和日常语言解释每个 Agent 在干什么、信息怎么流动、为什么这样设计。
             </p>
           </div>

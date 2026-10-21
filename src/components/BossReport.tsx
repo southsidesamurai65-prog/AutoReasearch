@@ -29,10 +29,10 @@ export function BossReport({ report, status }: BossReportProps) {
   }
 
   return (
-    <section className="panel min-h-0">
+    <section className="panel h-[clamp(430px,58vh,760px)] shrink-0">
       <div className="panel-head">
         <div className="panel-title">
-          <MessageSquareText size={14} className="text-slate-400" />
+          <MessageSquareText size={14} className="text-mo-600" />
           Boss 汇报
           {running && (
             <span className="flex items-center gap-1 font-mono text-[9px] text-accent/80">
@@ -41,7 +41,7 @@ export function BossReport({ report, status }: BossReportProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 font-mono text-[9px] text-slate-600">
+        <div className="flex items-center gap-1 font-mono text-[9px] text-mo-400">
           <Radio size={9} />
           {report.length > 0
             ? `${report.length.toLocaleString('zh-CN')} chars`
@@ -76,17 +76,17 @@ export function BossReport({ report, status }: BossReportProps) {
                 />
               ))}
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-mo-500">
               Boss Agent 正在阅读目标与文件…
             </p>
           </div>
         ) : (
           <div className="flex h-full min-h-[120px] flex-col items-center justify-center gap-2 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line/70 bg-ink-850/60">
-              <MessageSquareText size={15} className="text-slate-600" />
+              <MessageSquareText size={15} className="text-mo-400" />
             </div>
-            <p className="text-[11px] text-slate-500">所长还没有开始工作</p>
-            <p className="max-w-[300px] text-[10px] leading-4 text-slate-600">
+            <p className="text-[11px] text-mo-500">所长还没有开始工作</p>
+            <p className="max-w-[300px] text-[10px] leading-4 text-mo-400">
               在左侧写下研究目标后启动。这里会实时显示 Boss 的拆解思路、阶段结论与最终汇报。
             </p>
           </div>

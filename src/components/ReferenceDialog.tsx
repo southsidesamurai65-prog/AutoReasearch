@@ -42,8 +42,8 @@ export function ReferenceDialog({
       title="添加外部引用"
       subtitle="文件不会复制，只在工作区 .auto/refs 下建立只读链接"
       icon={
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-sky-400/25 bg-sky-400/10">
-          <FileLock2 size={15} className="text-sky-300" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-dai-400/25 bg-dai-400/10">
+          <FileLock2 size={15} className="text-dai-300" />
         </span>
       }
       onClose={onClose}
@@ -75,7 +75,7 @@ export function ReferenceDialog({
             </button>
           </div>
           {error && (
-            <p className="flex items-center gap-1.5 text-[10px] text-rose-300">
+            <p className="flex items-center gap-1.5 text-[10px] text-yan-300">
               <TriangleAlert size={10} /> {error}
             </p>
           )}
@@ -93,7 +93,7 @@ export function ReferenceDialog({
         <div className="space-y-2">
           <div className="rounded-lg border border-line/70 bg-ink-950/40 p-2.5">
             <p className="panel-kicker mb-1.5">引用规则</p>
-            <ul className="space-y-1.5 text-[10px] leading-4 text-slate-500">
+            <ul className="space-y-1.5 text-[10px] leading-4 text-mo-500">
               <li>· 原文件不会被复制或上传。</li>
               <li>· 工作区里会出现一个只读链接。</li>
               <li>
@@ -106,7 +106,7 @@ export function ReferenceDialog({
           <div className="rounded-lg border border-line/70 bg-ink-950/40 p-2.5">
             <p className="panel-kicker mb-1">工作区</p>
             <p
-              className="break-all font-mono text-[9px] leading-4 text-slate-500"
+              className="break-all font-mono text-[9px] leading-4 text-mo-500"
               title={workspacePath}
             >
               {workspacePath}
