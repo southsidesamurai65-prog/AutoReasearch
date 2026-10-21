@@ -37,6 +37,17 @@ export async function getHarnessStatus(force = false): Promise<HarnessStatus> {
   return status
 }
 
+export async function deleteOpencodeSession(sessionId: string): Promise<boolean> {
+  try {
+    await execFileAsync('opencode', ['session', 'delete', sessionId], {
+      timeout: 15_000,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export interface HarnessRunOptions {
   prompt: string
   cwd: string
@@ -45,6 +56,9 @@ export interface HarnessRunOptions {
   sessionId?: string
   signal?: AbortSignal
   timeoutMs?: number
+  maxSteps?: number
+  maxCostUsd?: number
+  env?: NodeJS.ProcessEnv
   autoApprove?: boolean
   onText?: (delta: string, fullText: string) => void
   onTool?: (tool: string, status: string) => void
@@ -146,6 +160,7 @@ export function runOpencode(options: HarnessRunOptions): Promise<HarnessRunResul
     let cacheReadTokens = 0
     let cacheWriteTokens = 0
     let toolCalls = 0
+    let steps = 0
     let sessionID: string | undefined
     let runtimeError: string | undefined
     const textParts = new Map<string, { order: number; text: string }>()
@@ -185,7 +200,7 @@ export function runOpencode(options: HarnessRunOptions): Promise<HarnessRunResul
 
     const child = spawn('opencode', args, {
       cwd: options.cwd,
-      env: process.env,
+      env: { ...process.env, ...options.env },
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -236,10 +251,23 @@ export function runOpencode(options: HarnessRunOptions): Promise<HarnessRunResul
         }
 
         if (event.type === 'step_finish' && event.part) {
+          steps += 1
           tokens += event.part.tokens?.total ?? 0
           cacheReadTokens += event.part.tokens?.cache?.read ?? 0
           cacheWriteTokens += event.part.tokens?.cache?.write ?? 0
           costUsd += event.part.cost ?? 0
+
+          if (!runtimeError && options.maxSteps && steps > options.maxSteps) {
+            runtimeError = `已达到最大轮次限制（${options.maxSteps}）`
+            terminate(child)
+          } else if (
+            !runtimeError &&
+            options.maxCostUsd !== undefined &&
+            costUsd > options.maxCostUsd
+          ) {
+            runtimeError = `已达到预算上限（$${options.maxCostUsd.toFixed(4)}）`
+            terminate(child)
+          }
         }
 
         if (event.type === 'tool_use' && event.part) {

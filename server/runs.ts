@@ -2,18 +2,28 @@ import { nanoid } from 'nanoid'
 import type {
   AgentConfig,
   AgentRole,
+  AppSettings,
   CallNode,
   ReferenceItem,
   RunEvent,
   RunMode,
   RunSnapshot,
   RunStatus,
+  RunSummary,
   ThreadMode,
   WorkspaceFile,
 } from '../shared/types'
 import { buildTeacherBrief } from './teacher-brief'
 import { looksHard } from './run-utils'
 import { realScenario } from './real'
+import {
+  deleteHistoricalRun,
+  getHistoricalRun,
+  listHistoricalRuns,
+  saveRunHistory,
+  summarizeRun,
+} from './run-history'
+import { createWorkspaceCheckpoint } from './workspace-checkpoint'
 import { recordBossThread } from './workspace'
 
 interface RunRecord {
@@ -117,6 +127,9 @@ function finish(run: RunRecord, status: RunStatus, summary: string): void {
 
   emit(run, { type: 'run.finished', at: now(), status, summary })
   run.listeners.clear()
+  void saveRunHistory({ ...snapshot, events: [] }).catch(() => {
+    // history persistence is best-effort; the live snapshot still exists
+  })
 }
 
 function pick(agents: AgentConfig[], role: AgentRole): AgentConfig | undefined {
@@ -449,6 +462,7 @@ export interface StartRunInput {
   workspace: string
   refs: ReferenceItem[]
   workspaceFiles: WorkspaceFile[]
+  settings: AppSettings
 }
 
 export function startRun(input: StartRunInput): string {
@@ -521,6 +535,8 @@ export function startRun(input: StartRunInput): string {
     bossSessionId: input.bossSessionId,
     threadMemory: input.threadMemory,
     threadNotice: input.threadNotice,
+    settings: input.settings,
+    agentUsage: new Map(),
     emit: (event: RunEvent) => emit(record, event),
     log: (message: string, level: 'info' | 'warn' | 'error' = 'info') =>
       log(record, message, level),
@@ -543,6 +559,19 @@ export function startRun(input: StartRunInput): string {
   void (async () => {
     try {
       if (input.mode === 'real') {
+        try {
+          const checkpoint = await createWorkspaceCheckpoint(input.workspace, id)
+          if (checkpoint) {
+            record.snapshot.checkpoint = checkpoint
+            log(
+              record,
+              `工作区快照已创建：${checkpoint.commit.slice(0, 12)}`,
+            )
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          log(record, `工作区快照创建失败：${message}`, 'warn')
+        }
         await realScenario(host)
       } else {
         await mockScenario(record, input.agents, bossCall)
@@ -576,14 +605,38 @@ function trimRuns(): void {
   }
 }
 
+function cloneSnapshot(snapshot: RunSnapshot): RunSnapshot {
+  return {
+    ...snapshot,
+    calls: snapshot.calls.map((call) => ({ ...call })),
+    events: [...snapshot.events],
+  }
+}
+
 export function getRunSnapshot(id: string): RunSnapshot | undefined {
   const record = runs.get(id)
-  if (!record) return undefined
-  return {
-    ...record.snapshot,
-    calls: record.snapshot.calls.map((call) => ({ ...call })),
-    events: [...record.snapshot.events],
+  if (record) return cloneSnapshot(record.snapshot)
+  return getHistoricalRun(id)
+}
+
+export function listRuns(): RunSummary[] {
+  const merged = new Map<string, RunSummary>()
+  for (const summary of listHistoricalRuns()) {
+    merged.set(summary.id, summary)
   }
+  for (const record of runs.values()) {
+    merged.set(record.snapshot.id, summarizeRun(record.snapshot))
+  }
+  return [...merged.values()].sort((a, b) =>
+    b.startedAt.localeCompare(a.startedAt),
+  )
+}
+
+export async function deleteRun(id: string): Promise<boolean> {
+  const record = runs.get(id)
+  if (record?.snapshot.status === 'running') return false
+  runs.delete(id)
+  return deleteHistoricalRun(id)
 }
 
 export function subscribe(

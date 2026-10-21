@@ -3,7 +3,9 @@ import {
   ChevronDown,
   Cpu,
   FolderOpen,
+  History,
   RotateCcw,
+  Settings2,
   Terminal,
 } from 'lucide-react'
 import type { HarnessStatus, WorkspaceInfo } from '../../shared/types'
@@ -53,6 +55,8 @@ interface TopBarProps {
   workspace: WorkspaceInfo
   harness: HarnessStatus | null
   onOpenWorkspace: () => void
+  onOpenHistory: () => void
+  onOpenSettings: () => void
   onReset: () => void
 }
 
@@ -63,6 +67,8 @@ export function TopBar({
   workspace,
   harness,
   onOpenWorkspace,
+  onOpenHistory,
+  onOpenSettings,
   onReset,
 }: TopBarProps) {
   const status = STATUS[run.status]
@@ -159,6 +165,24 @@ export function TopBar({
           <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
           {status.label}
         </div>
+
+        <button
+          type="button"
+          onClick={onOpenHistory}
+          title="运行历史与工作区快照"
+          className="icon-btn"
+        >
+          <History size={14} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          title="运行设置：代理、超时、子会话"
+          className="icon-btn"
+        >
+          <Settings2 size={14} />
+        </button>
 
         <button
           type="button"

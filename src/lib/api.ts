@@ -1,14 +1,19 @@
 import type {
   AgentConfig,
   AppConfig,
+  AppSettings,
   CreateRunResponse,
   FsListing,
   HarnessStatus,
+  NetworkSettings,
   PublicAgentConfig,
   ReferenceItem,
   RunMode,
   RunSnapshot,
+  RunSummary,
+  RuntimeSettings,
   ThreadMode,
+  WorkspaceDiff,
   WorkspaceFile,
   WorkspaceState,
 } from '../../shared/types'
@@ -30,6 +35,21 @@ export type AgentPatch = Partial<
   >
 > & { clearKey?: boolean }
 
+export type SettingsPatch = {
+  network?: Partial<NetworkSettings>
+  runtime?: Partial<RuntimeSettings>
+}
+
+export interface ModelTestResult {
+  ok: boolean
+  model: string
+  text: string
+  error?: string
+  latencyMs: number
+  tokens: number
+  costUsd: number
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init)
   if (!response.ok) {
@@ -48,6 +68,26 @@ export const api = {
 
   harnessStatus(): Promise<HarnessStatus> {
     return request<HarnessStatus>('/api/harness/status')
+  },
+
+  settings(): Promise<AppSettings> {
+    return request<AppSettings>('/api/settings')
+  },
+
+  updateSettings(patch: SettingsPatch): Promise<AppSettings> {
+    return request<AppSettings>('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+  },
+
+  testModel(model?: string): Promise<ModelTestResult> {
+    return request<ModelTestResult>('/api/settings/test-model', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model }),
+    })
   },
 
   workspace(): Promise<WorkspaceState> {
@@ -158,6 +198,26 @@ export const api = {
 
   getRun(id: string): Promise<RunSnapshot> {
     return request<RunSnapshot>(`/api/runs/${id}`)
+  },
+
+  async listRuns(): Promise<RunSummary[]> {
+    const result = await request<{ runs: RunSummary[] }>('/api/runs')
+    return result.runs
+  },
+
+  deleteRun(id: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/api/runs/${id}`, { method: 'DELETE' })
+  },
+
+  getRunDiff(id: string): Promise<WorkspaceDiff> {
+    return request<WorkspaceDiff>(`/api/runs/${id}/diff`)
+  },
+
+  rollbackRun(id: string): Promise<{ ok: boolean; removed: string[] }> {
+    return request<{ ok: boolean; removed: string[] }>(
+      `/api/runs/${id}/rollback`,
+      { method: 'POST' },
+    )
   },
 
   cancelRun(id: string): Promise<{ ok: boolean }> {

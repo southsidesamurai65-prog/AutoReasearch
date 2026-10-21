@@ -1,4 +1,9 @@
-import type { AgentConfig, AgentRole, HarnessKind } from './types'
+import type {
+  AgentConfig,
+  AgentRole,
+  AppSettings,
+  HarnessKind,
+} from './types'
 
 export const HARNESS_LABELS: Record<HarnessKind, string> = {
   opencode: 'OpenCode Server',
@@ -16,6 +21,20 @@ export const ROLE_LABELS: Record<AgentRole, string> = {
   search: '检索',
   teacher: '教师',
   custom: '自定义',
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  network: {
+    enabled: false,
+    httpProxy: '',
+    httpsProxy: '',
+    noProxy: 'localhost,127.0.0.1,::1',
+    caCertPath: '',
+  },
+  runtime: {
+    runTimeoutMinutes: 15,
+    subagentSessionPolicy: 'delete',
+  },
 }
 
 const base = {

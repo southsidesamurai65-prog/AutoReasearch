@@ -1,5 +1,6 @@
 import type {
   AgentConfig,
+  AppSettings,
   CallNode,
   ReferenceItem,
   RunEvent,
@@ -20,6 +21,8 @@ export interface RunHost {
   bossSessionId: string | null
   threadMemory: string
   threadNotice?: string
+  settings: AppSettings
+  agentUsage: Map<string, { tokens: number; costUsd: number }>
   emit(event: RunEvent): void
   log(message: string, level?: 'info' | 'warn' | 'error'): void
   emitBoss(text: string): void

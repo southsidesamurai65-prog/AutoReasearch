@@ -6,7 +6,9 @@ import fastifyStatic from '@fastify/static'
 import type {
   AgentConfig,
   HarnessKind,
+  NetworkSettings,
   RunMode,
+  RuntimeSettings,
   ThreadMode,
 } from '../shared/types'
 import { DEFAULT_MODEL } from '../shared/presets'
@@ -17,7 +19,9 @@ import {
   getAgents,
   getProjectName,
   getPublicConfig,
+  getSettings,
   updateAgent,
+  updateSettings,
 } from './store'
 import {
   addLinkedReference,
@@ -35,13 +39,25 @@ import {
   prepareReferencesForRun,
   removeReference,
 } from './workspace'
-import { getHarnessStatus } from './harness/opencode'
+import {
+  deleteOpencodeSession,
+  getHarnessStatus,
+  runOpencode,
+} from './harness/opencode'
+import { proxyEnv } from './network'
+import { loadRunHistory } from './run-history'
 import {
   cancelRun,
+  deleteRun,
   getRunSnapshot,
+  listRuns,
   startRun,
   subscribe,
 } from './runs'
+import {
+  getWorkspaceDiff,
+  restoreWorkspaceCheckpoint,
+} from './workspace-checkpoint'
 
 const PORT = Number(process.env.PORT ?? 8787)
 const HOST = process.env.HOST ?? '127.0.0.1'
@@ -99,9 +115,64 @@ function sanitizeAgentPatch(
   return patch
 }
 
+function sanitizeSettings(body: unknown): {
+  network?: Partial<NetworkSettings>
+  runtime?: Partial<RuntimeSettings>
+} {
+  if (!body || typeof body !== 'object') return {}
+  const raw = body as Record<string, unknown>
+  const result: {
+    network?: Partial<NetworkSettings>
+    runtime?: Partial<RuntimeSettings>
+  } = {}
+
+  if (raw.network && typeof raw.network === 'object') {
+    const network = raw.network as Record<string, unknown>
+    const next: Partial<NetworkSettings> = {}
+    if (typeof network.enabled === 'boolean') next.enabled = network.enabled
+    if (typeof network.httpProxy === 'string') {
+      next.httpProxy = network.httpProxy.trim().slice(0, 500)
+    }
+    if (typeof network.httpsProxy === 'string') {
+      next.httpsProxy = network.httpsProxy.trim().slice(0, 500)
+    }
+    if (typeof network.noProxy === 'string') {
+      next.noProxy = network.noProxy.trim().slice(0, 2000)
+    }
+    if (typeof network.caCertPath === 'string') {
+      next.caCertPath = network.caCertPath.trim().slice(0, 1000)
+    }
+    result.network = next
+  }
+
+  if (raw.runtime && typeof raw.runtime === 'object') {
+    const runtime = raw.runtime as Record<string, unknown>
+    const next: Partial<RuntimeSettings> = {}
+    if (
+      typeof runtime.runTimeoutMinutes === 'number' &&
+      Number.isFinite(runtime.runTimeoutMinutes)
+    ) {
+      next.runTimeoutMinutes = Math.min(
+        180,
+        Math.max(1, Math.round(runtime.runTimeoutMinutes)),
+      )
+    }
+    if (
+      runtime.subagentSessionPolicy === 'delete' ||
+      runtime.subagentSessionPolicy === 'keep'
+    ) {
+      next.subagentSessionPolicy = runtime.subagentSessionPolicy
+    }
+    result.runtime = next
+  }
+
+  return result
+}
+
 async function main(): Promise<void> {
   await ensureStore()
   await ensureWorkspaceStore()
+  await loadRunHistory()
 
   const app = Fastify({
     logger: { level: process.env.LOG_LEVEL ?? 'info' },
@@ -142,6 +213,56 @@ async function main(): Promise<void> {
 
   app.get('/api/config', async () =>
     getPublicConfig(getActiveWorkspacePath()),
+  )
+
+  app.get('/api/settings', async () => getSettings())
+
+  app.put<{ Body: unknown }>('/api/settings', async (request) => {
+    return updateSettings(sanitizeSettings(request.body))
+  })
+
+  app.post<{ Body: { model?: string } }>(
+    '/api/settings/test-model',
+    async (request, reply) => {
+      const agents = getAgents()
+      const boss =
+        agents.find((agent) => agent.role === 'boss') ?? agents[0]
+      const model =
+        typeof request.body?.model === 'string' && request.body.model.trim()
+          ? request.body.model.trim()
+          : boss?.model || DEFAULT_MODEL
+
+      if (!/^[\w.-]+\/[\w.:-]+$/.test(model)) {
+        return reply.code(400).send({ error: `模型格式无效：${model}` })
+      }
+
+      const startedAt = Date.now()
+      const settings = getSettings()
+      const result = await runOpencode({
+        prompt: '请只回复 OK，不要调用任何工具。',
+        cwd: getActiveWorkspacePath(),
+        model,
+        title: 'AUTO model test',
+        timeoutMs: 120_000,
+        maxSteps: 2,
+        maxCostUsd: 1,
+        autoApprove: false,
+        env: proxyEnv(settings.network),
+      })
+      if (result.sessionID) {
+        await deleteOpencodeSession(result.sessionID)
+      }
+
+      return {
+        ok: !result.error,
+        model,
+        text: result.text.slice(0, 500),
+        error: result.error,
+        latencyMs: Date.now() - startedAt,
+        tokens: result.tokens,
+        costUsd: result.costUsd,
+      }
+    },
   )
 
   app.post<{ Body: { presetId?: string; name?: string } }>(
@@ -334,9 +455,12 @@ async function main(): Promise<void> {
       workspace,
       refs,
       workspaceFiles,
+      settings: getSettings(),
     })
     return reply.code(202).send({ runId })
   })
+
+  app.get('/api/runs', async () => ({ runs: listRuns() }))
 
   app.get<{ Params: { id: string } }>(
     '/api/runs/:id',
@@ -344,6 +468,50 @@ async function main(): Promise<void> {
       const snapshot = getRunSnapshot(request.params.id)
       if (!snapshot) return reply.code(404).send({ error: 'run not found' })
       return snapshot
+    },
+  )
+
+  app.delete<{ Params: { id: string } }>(
+    '/api/runs/:id',
+    async (request, reply) => {
+      const removed = await deleteRun(request.params.id)
+      if (!removed) {
+        return reply
+          .code(409)
+          .send({ error: 'run not found or still running' })
+      }
+      return { ok: true }
+    },
+  )
+
+  app.get<{ Params: { id: string } }>(
+    '/api/runs/:id/diff',
+    async (request, reply) => {
+      const snapshot = getRunSnapshot(request.params.id)
+      if (!snapshot) return reply.code(404).send({ error: 'run not found' })
+      if (!snapshot.checkpoint) {
+        return reply.code(400).send({ error: '该运行没有工作区快照' })
+      }
+      return getWorkspaceDiff(snapshot.workspace, snapshot.checkpoint)
+    },
+  )
+
+  app.post<{ Params: { id: string } }>(
+    '/api/runs/:id/rollback',
+    async (request, reply) => {
+      const snapshot = getRunSnapshot(request.params.id)
+      if (!snapshot) return reply.code(404).send({ error: 'run not found' })
+      if (snapshot.status === 'running') {
+        return reply.code(409).send({ error: '研究进行中，无法回滚' })
+      }
+      if (!snapshot.checkpoint) {
+        return reply.code(400).send({ error: '该运行没有工作区快照' })
+      }
+      const result = await restoreWorkspaceCheckpoint(
+        snapshot.workspace,
+        snapshot.checkpoint,
+      )
+      return { ok: true, removed: result.removed }
     },
   )
 

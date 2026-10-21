@@ -173,5 +173,36 @@ export function useRun() {
     setState(idleState)
   }, [closeSource])
 
-  return { state, start, cancel, reset }
+  const load = useCallback(
+    async (runId: string) => {
+      closeSource()
+      try {
+        const snapshot = await api.getRun(runId)
+        setState({
+          status: snapshot.status,
+          runId: snapshot.id,
+          prompt: snapshot.prompt,
+          files: snapshot.files,
+          mode: snapshot.mode,
+          workspace: snapshot.workspace,
+          calls: snapshot.calls,
+          report: snapshot.bossReport,
+          teacher: snapshot.teacher ?? null,
+          startedAt: snapshot.startedAt,
+          endedAt: snapshot.endedAt,
+          summary: snapshot.summary,
+          error: null,
+        })
+      } catch (error) {
+        setState({
+          ...idleState,
+          error: error instanceof Error ? error.message : '读取历史失败',
+        })
+        throw error
+      }
+    },
+    [closeSource],
+  )
+
+  return { state, start, cancel, reset, load }
 }

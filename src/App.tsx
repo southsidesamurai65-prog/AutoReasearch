@@ -20,6 +20,8 @@ import { BossReport } from './components/BossReport'
 import { TeacherPanel } from './components/TeacherPanel'
 import { WorkspaceDialog } from './components/WorkspaceDialog'
 import { ReferenceDialog } from './components/ReferenceDialog'
+import { SettingsDialog } from './components/SettingsDialog'
+import { RunHistoryDialog } from './components/RunHistoryDialog'
 
 export default function App() {
   const [config, setConfig] = useState<AppConfig | null>(null)
@@ -35,7 +37,9 @@ export default function App() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [showWorkspace, setShowWorkspace] = useState(false)
   const [showReference, setShowReference] = useState(false)
-  const { state: run, start, cancel, reset } = useRun()
+  const [showSettings, setShowSettings] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const { state: run, start, cancel, reset, load } = useRun()
 
   useEffect(() => {
     let cancelled = false
@@ -218,6 +222,9 @@ export default function App() {
   const teacherEnabled = config.agents.some(
     (agent) => agent.role === 'teacher' && agent.enabled,
   )
+  const bossModel =
+    config.agents.find((agent) => agent.role === 'boss')?.model ||
+    config.defaultModel
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-0 lg:overflow-hidden">
@@ -228,6 +235,8 @@ export default function App() {
         workspace={workspaceState.workspace}
         harness={harness}
         onOpenWorkspace={openWorkspaceDialog}
+        onOpenHistory={() => setShowHistory(true)}
+        onOpenSettings={() => setShowSettings(true)}
         onReset={reset}
       />
 
@@ -294,6 +303,29 @@ export default function App() {
           workspacePath={workspaceState.workspace.path}
           onClose={() => setShowReference(false)}
           onAdded={addReference}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsDialog
+          settings={config.settings}
+          bossModel={bossModel}
+          onClose={() => setShowSettings(false)}
+          onSaved={(settings) =>
+            setConfig((previous) =>
+              previous ? { ...previous, settings } : previous,
+            )
+          }
+        />
+      )}
+
+      {showHistory && (
+        <RunHistoryDialog
+          onClose={() => setShowHistory(false)}
+          onLoad={load}
+          onWorkspaceChanged={() => {
+            void refreshWorkspace().catch(() => {})
+          }}
         />
       )}
     </div>

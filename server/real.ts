@@ -5,7 +5,8 @@ import type {
   TeacherBrief,
 } from '../shared/types'
 import type { HarnessRunResult } from './harness/opencode'
-import { runOpencode } from './harness/opencode'
+import { deleteOpencodeSession, runOpencode } from './harness/opencode'
+import { proxyEnv } from './network'
 import type { RunHost } from './run-host'
 import { buildTeacherBrief } from './teacher-brief'
 import {
@@ -592,15 +593,51 @@ async function runHarness(
       'warn',
     )
   }
-  return runOpencode({
+
+  const used = host.agentUsage.get(agent.id)?.costUsd ?? 0
+  const remaining =
+    agent.budgetUsd > 0
+      ? Math.max(0, agent.budgetUsd - used)
+      : undefined
+
+  if (remaining !== undefined && remaining <= 0) {
+    return {
+      text: '',
+      tokens: 0,
+      costUsd: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      toolCalls: 0,
+      error: `已达到 ${agent.name} 的预算上限（$${agent.budgetUsd.toFixed(2)}）`,
+      exitCode: null,
+    }
+  }
+
+  const result = await runOpencode({
     prompt,
     cwd: host.snapshot.workspace,
     model: modelFor(agent),
     title: `${agent.name} · ${title}`,
     sessionId,
     signal: host.signal,
+    maxSteps: agent.maxTurns > 0 ? agent.maxTurns : undefined,
+    maxCostUsd: remaining,
+    env: proxyEnv(host.settings.network),
+    timeoutMs:
+      Math.max(1, host.settings.runtime.runTimeoutMinutes) * 60_000,
     onText,
   })
+
+  const current = host.agentUsage.get(agent.id) ?? {
+    tokens: 0,
+    costUsd: 0,
+  }
+  host.agentUsage.set(agent.id, {
+    tokens: current.tokens + result.tokens,
+    costUsd: current.costUsd + result.costUsd,
+  })
+
+  return result
 }
 
 async function runAgentCall(
@@ -637,6 +674,19 @@ async function runAgentCall(
       toolCalls: 0,
       error: error instanceof Error ? error.message : String(error),
       exitCode: null,
+    }
+  }
+
+  if (
+    host.settings.runtime.subagentSessionPolicy === 'delete' &&
+    result.sessionID
+  ) {
+    const deleted = await deleteOpencodeSession(result.sessionID)
+    if (!deleted) {
+      host.log(
+        `${agent.name} 会话清理失败：${result.sessionID}`,
+        'warn',
+      )
     }
   }
 

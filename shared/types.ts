@@ -12,6 +12,25 @@ export type HarnessKind = 'opencode' | 'claude-code' | 'codex' | 'openai-compati
 
 export type RunMode = 'mock' | 'real'
 export type ThreadMode = 'continue' | 'new'
+export type SubagentSessionPolicy = 'delete' | 'keep'
+
+export interface NetworkSettings {
+  enabled: boolean
+  httpProxy: string
+  httpsProxy: string
+  noProxy: string
+  caCertPath: string
+}
+
+export interface RuntimeSettings {
+  runTimeoutMinutes: number
+  subagentSessionPolicy: SubagentSessionPolicy
+}
+
+export interface AppSettings {
+  network: NetworkSettings
+  runtime: RuntimeSettings
+}
 
 export interface AgentConfig {
   id: string
@@ -36,6 +55,7 @@ export interface AppConfig {
   workspace: string
   defaultModel: string
   agents: PublicAgentConfig[]
+  settings: AppSettings
 }
 
 export interface WorkspaceInfo {
@@ -176,6 +196,20 @@ export type RunEvent =
       message: string
     }
 
+export interface WorkspaceCheckpoint {
+  ref: string
+  commit: string
+  createdAt: string
+}
+
+export interface WorkspaceDiff {
+  checkpoint: WorkspaceCheckpoint
+  stat: string
+  diff: string
+  status: string
+  truncated: boolean
+}
+
 export interface RunSnapshot {
   id: string
   prompt: string
@@ -184,6 +218,7 @@ export interface RunSnapshot {
   workspace: string
   threadMode: ThreadMode
   bossSessionId?: string
+  checkpoint?: WorkspaceCheckpoint
   status: RunStatus
   startedAt: string
   endedAt?: string
@@ -192,6 +227,22 @@ export interface RunSnapshot {
   teacher?: TeacherBrief
   summary?: string
   events: RunEvent[]
+}
+
+export interface RunSummary {
+  id: string
+  prompt: string
+  mode: RunMode
+  workspace: string
+  threadMode: ThreadMode
+  status: RunStatus
+  startedAt: string
+  endedAt?: string
+  summary?: string
+  tokens: number
+  costUsd: number
+  callCount: number
+  checkpoint?: WorkspaceCheckpoint
 }
 
 export interface CreateRunResponse {
